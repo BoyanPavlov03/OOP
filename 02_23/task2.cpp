@@ -21,8 +21,8 @@ struct GradeForSubject {
 };
 
 struct GradeBook {
-    char *name;
-    char *faculty_number;
+    const char *name;
+    const char *faculty_number;
     int grades_count;
     GradeForSubject *grades;
 };
@@ -113,8 +113,6 @@ int main() {
     sortGrades(grade_book);
     std::cout << "Will pass: " << std::boolalpha << canAdvance(grade_book) << std::endl;
     std::cout << "Will get scholarship: " << std::boolalpha << willGetScholarship(grade_book) << std::endl;
-    delete grade_book->name;
-    delete grade_book->faculty_number;
     delete[] grade_book->grades;
     delete grade_book;
 }
