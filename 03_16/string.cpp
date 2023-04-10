@@ -39,7 +39,7 @@ MyString::MyString(const MyString& other) : arr(new char[strlen(other.arr) + 1])
     }
 }
 
-MyString& MyString::operator=(const  MyString& other) {
+MyString& MyString::operator=(const MyString& other) {
     if (this != &other) {
         delete[] arr;
         arr = new char[strlen(other.arr) + 1];
