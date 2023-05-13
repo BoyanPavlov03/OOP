@@ -1,4 +1,7 @@
 #include "Table.h"
+#include "String.h"
+#include "Integer.h"
+#include "Double.h"
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -18,6 +21,42 @@ std::string Table::trim(const std::string& str) {
     return str.substr(strBegin, strRange);
 }
 
+std::string Table::extractString(const std::string& str) {
+    std::string result;
+
+    for(int i = 1; i < str.size() - 1; i++) {
+        if (str[i] == '\\' && i + 1 < str.size() - 1) {
+            if (str[i + 1] == '"') {
+                result += '"';
+                i++;
+            } else if (str[i + 1] == '\\') {
+                result += '\\';
+                i++;
+            } else {
+                throw std::invalid_argument("Not a string");
+            }
+        } else if (str[i] == '\\' && i + 1 >= str.size() - 1) {
+            throw std::invalid_argument("Not a string");
+        } else {
+            result += str[i];
+        }
+    }
+
+    return result;
+}
+
+Cell* Table::extractCell(const std::string& str)  {
+    if (str[0] == '"' && str[str.size() - 1] == '"') {
+        return new String(extractString(str));
+    } else if (str.find_first_not_of("0123456789") == std::string::npos) {
+        return new Integer(std::stoi(str));
+    } else if (str.find_first_not_of("0123456789.") == std::string::npos) {
+        return new Double(std::stod(str));
+    } else {
+        throw std::invalid_argument("Not a cell");
+    }
+}
+
 void Table::readFromFile(const std::string& fileName) {
     std::ifstream file(fileName);
     if (!file.is_open()) {
@@ -26,22 +65,25 @@ void Table::readFromFile(const std::string& fileName) {
     }
 
     std::string line;
+
     while (std::getline(file, line)) {
-        std::vector<std::string> row;
         std::string cell;
+        std::vector<Cell*> row;
+
         for (const auto& character : line) {
             if (character == ',') {
-                row.push_back(trim(cell));
+                row.push_back(extractCell(trim(cell)));
                 cell = "";
             } else {
                 cell += character;
             }
         }
-
-        row.push_back(trim(cell));
+        row.push_back(extractCell(trim(cell)));
 
         data.push_back(row);
     }
+
+    file.close();
 }
 
 void Table::print() const {
@@ -55,9 +97,9 @@ void Table::print() const {
 
         for (int j = 0; j < data[i].size(); j++) {
             if (widthsOfEachColumns.size() <= j) {
-                widthsOfEachColumns.push_back(data[i][j].size());
-            } else if (data[i][j].size() > widthsOfEachColumns[j]) {
-                widthsOfEachColumns.insert(widthsOfEachColumns.begin() + j, data[i][j].size());
+                widthsOfEachColumns.push_back(data[i][j]->toString().size());
+            } else if (data[i][j]->toString().size() > widthsOfEachColumns[j]) {
+                widthsOfEachColumns[j] = data[i][j]->toString().size();
             }
         }
     }
@@ -67,7 +109,9 @@ void Table::print() const {
             if (data[i].size() <= j) {
                 std::cout << std::string(widthsOfEachColumns[j] + 2, ' ') << "|";
             } else {
-                std::cout << " " << data[i][j] << std::string(widthsOfEachColumns[j] - data[i][j].size(), ' ') << " |";
+                std::cout << " ";
+                data[i][j]->print();
+                std::cout << std::string(widthsOfEachColumns[j] - data[i][j]->toString().size(), ' ') << " |";
             }
         }
         std::cout << std::endl;
