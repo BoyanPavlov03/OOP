@@ -17,3 +17,7 @@ std::string Double::toString() const {
 Cell *Double::clone() const {
     return new Double(*this);
 }
+
+double Double::getValue() const {
+    return value;
+}

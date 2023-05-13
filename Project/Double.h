@@ -7,5 +7,6 @@ public:
     void print() const override;
     std::string toString() const override;
     Cell* clone() const override;
+    double getValue() const override;
 };
 

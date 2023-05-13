@@ -14,3 +14,7 @@ std::string Integer::toString() const {
 Cell *Integer::clone() const {
     return new Integer(*this);
 }
+
+double Integer::getValue() const {
+    return (double)value;
+}

@@ -10,6 +10,7 @@ private:
     std::string trim(const std::string& str);
     std::string extractString(const std::string& str, int row, int col);
     Cell* extractCell(const std::string& str, int row, int col);
+    double calculateFormula(const std::string& formula);
 public:
     Table() = default;
     explicit Table(const std::string& fileName);

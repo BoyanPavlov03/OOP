@@ -15,3 +15,13 @@ std::string String::toString() const {
 Cell *String::clone() const {
     return new String(*this);
 }
+
+double String::getValue() const {
+    double num;
+    try {
+        num = stod(value);
+    } catch (...) {
+        return 0;
+    }
+    return num;
+}

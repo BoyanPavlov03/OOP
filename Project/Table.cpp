@@ -2,11 +2,13 @@
 #include "String.h"
 #include "Integer.h"
 #include "Double.h"
+#include "Formula.h"
 #include "UnknownDataTypeException.h"
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <stack>
 
 Table::Table(const std::string& fileName) {
     readFromFile(fileName);
@@ -15,7 +17,7 @@ Table::Table(const std::string& fileName) {
 Table::~Table() {
     for (auto& row : data) {
         for (auto& cell : row) {
-            delete &cell;
+            delete cell;
         }
     }
 }
@@ -55,8 +57,122 @@ std::string Table::extractString(const std::string& str, int row, int col) {
     return result;
 }
 
-Cell* Table::extractCell(const std::string& str, int row, int col)  {
-    if (str[0] == '"' && str[str.size() - 1] == '"') {
+double Table::calculateFormula(const std::string &formula) {
+    std::stack<double> operands;
+    std::stack<char> operators;
+
+    for (int i = 0; i < formula.length(); i++) {
+        if (formula[i] >= '0' && formula[i] <= '9') {
+            double num = 0;
+            while (i < formula.length() && formula[i] >= '0' && formula[i] <= '9') {
+                num = num * 10 + (formula[i] - '0');
+                i++;
+            }
+            operands.push(num);
+            i--;
+        } else if (formula[i] == '+' || formula[i] == '-' || formula[i] == '*' || formula[i] == '/') {
+            while (!operators.empty() && ((operators.top() == '*' || operators.top() == '/') || (operators.top() == '+' || operators.top() == '-') && (formula[i] == '+' || formula[i] == '-'))) {
+                double op2 = operands.top();
+                operands.pop();
+                double op1 = operands.top();
+                operands.pop();
+                char op = operators.top();
+                operators.pop();
+
+                double result;
+                if (op == '+') {
+                    result = op1 + op2;
+                } else if (op == '-') {
+                    result = op1 - op2;
+                } else if (op == '*') {
+                    result = op1 * op2;
+                } else {
+                    result = op1 / op2;
+                }
+                operands.push(result);
+            }
+            operators.push(formula[i]);
+        } else if (formula[i] == '(') {
+            operators.push(formula[i]);
+        } else if (formula[i] == ')') {
+            while (operators.top() != '(') {
+                double op2 = operands.top();
+                operands.pop();
+                double op1 = operands.top();
+                operands.pop();
+                char op = operators.top();
+                operators.pop();
+
+                double result;
+                if (op == '+') {
+                    result = op1 + op2;
+                } else if (op == '-') {
+                    result = op1 - op2;
+                } else if (op == '*') {
+                    result = op1 * op2;
+                } else {
+                    result = op1 / op2;
+                }
+                operands.push(result);
+            }
+            operators.pop();  // Remove the opening parenthesis
+        } else if (formula[i] == 'R') {
+            // Extract the row number
+            i++;
+            int row = 0;
+            while (i < formula.length() && formula[i] >= '0' && formula[i] <= '9') {
+                row = row * 10 + (formula[i] - '0');
+                i++;
+            }
+
+            // Extract the column number
+            i++; // skip "C"
+            int col = 0;
+            while (i < formula.length() && formula[i] >= '0' && formula[i] <= '9') {
+                col = col * 10 + (formula[i] - '0');
+                i++;
+            }
+
+            // Get the cell value from the map
+            std::string cellRef = "R" + std::to_string(row) + "C" + std::to_string(col);
+            double value = 0;
+            if (row < data.size() && col < data[row].size()) {
+                value = data[row][col]->getValue();
+            }
+
+            operands.push(value);
+            i--;
+        }
+    }
+
+    while (!operators.empty()) {
+        double op2 = operands.top();
+        operands.pop();
+        double op1 = operands.top();
+        operands.pop();
+        char op = operators.top();
+        operators.pop();
+
+        double result;
+        if (op == '+') {
+            result = op1 + op2;
+        } else if (op == '-') {
+            result = op1 - op2;
+        } else if (op == '*') {
+            result = op1 * op2;
+        } else {
+            result = op1 / op2;
+        }
+        operands.push(result);
+    }
+
+    return operands.top();
+}
+
+Cell* Table::extractCell(const std::string& str, int row, int col) {
+    if (str[0] == '=') {
+        return new Formula(0, str);
+    } else if (str[0] == '"' && str[str.size() - 1] == '"') {
         return new String(extractString(str, row, col));
     } else if (str.find_first_not_of("+-0123456789") == std::string::npos) {
         return new Integer(std::stoi(str));
@@ -104,6 +220,15 @@ void Table::readFromFile(const std::string& fileName) {
     }
 
     file.close();
+
+    for (int i = 0; i < data.size(); i++) {
+        for (int j = 0; j < data[i].size(); j++) {
+            Formula* formula = dynamic_cast<Formula*>(data[i][j]);
+            if (formula != nullptr) {
+                formula->setValue(calculateFormula(formula->getFormula()));
+            }
+        }
+    }
 }
 
 void Table::print() const {
