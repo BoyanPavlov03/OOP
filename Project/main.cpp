@@ -1,8 +1,9 @@
-#include <iostream>
 #include "Table.h"
 
 int main() {
-    Table table("../table.txt");
-    table.print();
+    Table* table = new Table("../table.txt");;
+    table->print();
+
+    delete table;
     return 0;
 }

@@ -11,3 +11,7 @@ void String::print() const {
 std::string String::toString() const {
     return value;
 }
+
+Cell *String::clone() const {
+    return new String(*this);
+}

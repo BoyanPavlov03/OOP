@@ -10,3 +10,7 @@ void Integer::print() const {
 std::string Integer::toString() const {
     return std::to_string(value);
 }
+
+Cell *Integer::clone() const {
+    return new Integer(*this);
+}

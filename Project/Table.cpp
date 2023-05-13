@@ -2,12 +2,22 @@
 #include "String.h"
 #include "Integer.h"
 #include "Double.h"
+#include "UnknownDataTypeException.h"
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <sstream>
 
 Table::Table(const std::string& fileName) {
     readFromFile(fileName);
+}
+
+Table::~Table() {
+    for (auto& row : data) {
+        for (auto& cell : row) {
+            delete &cell;
+        }
+    }
 }
 
 std::string Table::trim(const std::string& str) {
@@ -21,7 +31,7 @@ std::string Table::trim(const std::string& str) {
     return str.substr(strBegin, strRange);
 }
 
-std::string Table::extractString(const std::string& str) {
+std::string Table::extractString(const std::string& str, int row, int col) {
     std::string result;
 
     for(int i = 1; i < str.size() - 1; i++) {
@@ -33,10 +43,10 @@ std::string Table::extractString(const std::string& str) {
                 result += '\\';
                 i++;
             } else {
-                throw std::invalid_argument("Not a string");
+                throw UnknownDataTypeException(str, row, col);
             }
         } else if (str[i] == '\\' && i + 1 >= str.size() - 1) {
-            throw std::invalid_argument("Not a string");
+            throw UnknownDataTypeException(str, row, col);
         } else {
             result += str[i];
         }
@@ -45,15 +55,19 @@ std::string Table::extractString(const std::string& str) {
     return result;
 }
 
-Cell* Table::extractCell(const std::string& str)  {
+Cell* Table::extractCell(const std::string& str, int row, int col)  {
     if (str[0] == '"' && str[str.size() - 1] == '"') {
-        return new String(extractString(str));
-    } else if (str.find_first_not_of("0123456789") == std::string::npos) {
+        return new String(extractString(str, row, col));
+    } else if (str.find_first_not_of("+-0123456789") == std::string::npos) {
         return new Integer(std::stoi(str));
-    } else if (str.find_first_not_of("0123456789.") == std::string::npos) {
-        return new Double(std::stod(str));
+    } else if (str.find_first_not_of("+-0123456789.") == std::string::npos) {
+        double num;
+        if (!(std::istringstream(str) >> num >> std::ws).eof()) {
+            throw UnknownDataTypeException(str, row, col);
+        }
+        return new Double(num);
     } else {
-        throw std::invalid_argument("Not a cell");
+        throw UnknownDataTypeException(str, row, col);
     }
 }
 
@@ -65,6 +79,8 @@ void Table::readFromFile(const std::string& fileName) {
     }
 
     std::string line;
+    int rowIndex = 1;
+    int colIndex = 1;
 
     while (std::getline(file, line)) {
         std::string cell;
@@ -72,15 +88,19 @@ void Table::readFromFile(const std::string& fileName) {
 
         for (const auto& character : line) {
             if (character == ',') {
-                row.push_back(extractCell(trim(cell)));
+                row.push_back(extractCell(trim(cell), rowIndex, colIndex)->clone());
+                colIndex++;
                 cell = "";
             } else {
                 cell += character;
             }
         }
-        row.push_back(extractCell(trim(cell)));
+
+        row.push_back(extractCell(trim(cell), rowIndex, colIndex)->clone());
 
         data.push_back(row);
+        rowIndex++;
+        colIndex = 1;
     }
 
     file.close();

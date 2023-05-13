@@ -8,14 +8,12 @@ private:
     std::vector<std::vector<Cell*>> data;
 
     std::string trim(const std::string& str);
-    std::string extractString(const std::string& str);
-    Cell* extractCell(const std::string& str);
+    std::string extractString(const std::string& str, int row, int col);
+    Cell* extractCell(const std::string& str, int row, int col);
 public:
     Table() = default;
     explicit Table(const std::string& fileName);
-    Table(const Table& other) = default;
-    Table& operator=(const Table& other) = default;
-    ~Table() = default;
+    ~Table();
 
     void readFromFile(const std::string& fileName);
 

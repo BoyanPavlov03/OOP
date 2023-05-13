@@ -13,3 +13,7 @@ std::string Double::toString() const {
     str.erase ( str.find_last_not_of('.') + 1, std::string::npos );
     return str;
 }
+
+Cell *Double::clone() const {
+    return new Double(*this);
+}

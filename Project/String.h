@@ -8,5 +8,6 @@ public:
     explicit String(const std::string value);
     void print() const override;
     std::string toString() const override;
+    Cell* clone() const override;
 };
 
