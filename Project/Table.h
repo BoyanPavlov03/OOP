@@ -11,8 +11,7 @@ private:
     std::string trim(const std::string& str);
     std::string extractString(const std::string& str, int row, int col);
     Cell* extractCell(const std::string& str, int row, int col);
-    double calculateFormula(const std::string& formula);
-    void calculateTwoNumbers(std::stack<double>& operands, std::stack<char>& operators);
+    void updateFormulas();
 public:
     Table() = default;
     explicit Table(const std::string& fileName);
