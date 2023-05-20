@@ -1,10 +1,10 @@
 #include "Formula.h"
 #include <iostream>
 
-Formula::Formula(double value, const std::string formula) : value(value), formula(formula) {}
+Formula::Formula(const std::string originalString, int row, int col) : Cell(originalString, row, col) {}
 
 void Formula::printToFile(std::ostream& os) const {
-    os << formula;
+    os << originalString;
 }
 
 void Formula::print() const {
@@ -38,20 +38,20 @@ void Formula::update(const std::vector<std::vector<Cell*>> &data) {
     std::stack<double> operands;
     std::stack<char> operators;
 
-    for (int i = 0; i < formula.length(); i++) {
-        if (formula[i] >= '0' && formula[i] <= '9') {
+    for (int i = 0; i < originalString.length(); i++) {
+        if (originalString[i] >= '0' && originalString[i] <= '9') {
             double num = 0;
-            while (i < formula.length() && formula[i] >= '0' && formula[i] <= '9') {
-                num = num * 10 + (formula[i] - '0');
+            while (i < originalString.length() && originalString[i] >= '0' && originalString[i] <= '9') {
+                num = num * 10 + (originalString[i] - '0');
                 i++;
             }
             operands.push(num);
             i--;
-        } else if (formula[i] == '+' || formula[i] == '-' || formula[i] == '*' || formula[i] == '/') {
-            operators.push(formula[i]);
-        } else if (formula[i] == '(') {
-            operators.push(formula[i]);
-        } else if (formula[i] == ')') {
+        } else if (originalString[i] == '+' || originalString[i] == '-' || originalString[i] == '*' || originalString[i] == '/') {
+            operators.push(originalString[i]);
+        } else if (originalString[i] == '(') {
+            operators.push(originalString[i]);
+        } else if (originalString[i] == ')') {
             do {
                 if (operators.empty() || operands.size() < 2) {
                     throw std::invalid_argument("Invalid formula!");
@@ -61,23 +61,23 @@ void Formula::update(const std::vector<std::vector<Cell*>> &data) {
             } while(operators.top() != '(');
 
             operators.pop();
-        } else if (formula[i] == 'R') {
+        } else if (originalString[i] == 'R') {
 
             i++;
             int row = 0;
-            while (i < formula.length() && formula[i] >= '0' && formula[i] <= '9') {
-                row = row * 10 + (formula[i] - '0');
+            while (i < originalString.length() && originalString[i] >= '0' && originalString[i] <= '9') {
+                row = row * 10 + (originalString[i] - '0');
                 i++;
             }
 
             i++;
             int col = 0;
-            while (i < formula.length() && formula[i] >= '0' && formula[i] <= '9') {
-                col = col * 10 + (formula[i] - '0');
+            while (i < originalString.length() && originalString[i] >= '0' && originalString[i] <= '9') {
+                col = col * 10 + (originalString[i] - '0');
                 i++;
             }
 
-            double value = 0;
+            double cellValue = 0;
             if (row < data.size() && col < data[row].size()) {
                 Formula* formulaCell = dynamic_cast<Formula*>(data[row][col]);
                 if (formulaCell != nullptr) {
@@ -85,10 +85,10 @@ void Formula::update(const std::vector<std::vector<Cell*>> &data) {
                         formulaCell->update(data);
                     }
                 }
-                value = data[row][col]->getNumericValue();
+                cellValue = data[row][col]->getNumericValue();
             }
 
-            operands.push(value);
+            operands.push(cellValue);
             i--;
         }
     }

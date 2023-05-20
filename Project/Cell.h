@@ -3,6 +3,13 @@
 #include <iostream>
 
 class Cell {
+protected:
+    std::string originalString;
+    int row;
+    int col;
+
+    Cell(std::string originalString, int row, int col);
+
 public:
     virtual ~Cell() = default;
     virtual void printToFile(std::ostream& os) const = 0;
@@ -11,8 +18,6 @@ public:
     virtual Cell* clone() const = 0;
     virtual double getNumericValue() const = 0;
 
-    friend std::ostream& operator<<(std::ostream& os, const Cell& cell) {
-        cell.printToFile(os);
-        return os;
-    }
+    friend std::ostream& operator<<(std::ostream& os, const Cell& cell);
+    static std::string trim(const std::string& str);
 };

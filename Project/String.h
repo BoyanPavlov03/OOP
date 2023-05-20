@@ -4,9 +4,10 @@
 
 class String: public Cell {
     std::string value;
-    std::string originalString;
+
 public:
     String(const std::string originalString, int row, int col);
+
     void printToFile(std::ostream& os) const override;
     void print() const override;
     std::string toString() const override;

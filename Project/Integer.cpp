@@ -1,7 +1,14 @@
 #include "Integer.h"
+#include "UnknownDataTypeException.h"
 #include <iostream>
 
-Integer::Integer(int value) : value(value) {}
+Integer::Integer(const std::string originalString, int row, int col) : Cell(originalString, row, col) {
+    try {
+        value = std::stoi(originalString);
+    } catch (...) {
+        throw UnknownDataTypeException(originalString, row, col);
+    }
+}
 
 void Integer::printToFile(std::ostream& os) const {
     os << value;

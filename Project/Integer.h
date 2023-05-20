@@ -3,8 +3,10 @@
 
 class Integer: public Cell {
     int value;
+
 public:
-    explicit Integer(int value);
+    Integer(const std::string originalString, int row, int col);
+
     void printToFile(std::ostream& os) const override;
     void print() const override;
     std::string toString() const override;

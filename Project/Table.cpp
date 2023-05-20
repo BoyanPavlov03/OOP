@@ -3,6 +3,7 @@
 #include "Integer.h"
 #include "Double.h"
 #include "Formula.h"
+#include "CellFactory.h"
 #include "UnknownDataTypeException.h"
 #include <iostream>
 #include <sstream>
@@ -12,35 +13,6 @@ Table::~Table() {
         for (auto& cell : row) {
             delete cell;
         }
-    }
-}
-
-std::string Table::trim(const std::string& str) {
-    const auto strBegin = str.find_first_not_of(' ');
-    if (strBegin == std::string::npos)
-        return "";
-
-    const auto strEnd = str.find_last_not_of(' ');
-    const auto strRange = strEnd - strBegin + 1;
-
-    return str.substr(strBegin, strRange);
-}
-
-Cell* Table::extractCell(const std::string& str, int row, int col) {
-    if (str[0] == '=') {
-        return new Formula(0, str);
-    } else if (str[0] == '"' && str[str.size() - 1] == '"') {
-        return new String(str, row, col);
-    } else if (str.find_first_not_of("+-0123456789") == std::string::npos) {
-        return new Integer(std::stoi(str));
-    } else if (str.find_first_not_of("+-0123456789.") == std::string::npos) {
-        double num;
-        if (!(std::istringstream(str) >> num >> std::ws).eof()) {
-            throw UnknownDataTypeException(str, row, col);
-        }
-        return new Double(num);
-    } else {
-        throw UnknownDataTypeException(str, row, col);
     }
 }
 
@@ -140,20 +112,22 @@ void Table::open() {
     int colIndex = 1;
 
     while (std::getline(file, line)) {
-        std::string cell;
+        std::string lineCell;
         std::vector<Cell*> row;
 
         for (const auto& character : line) {
             if (character == ',') {
-                row.push_back(extractCell(trim(cell), rowIndex, colIndex)->clone());
+                Cell* tableCell = CellFactory::createCell(Cell::trim(lineCell), rowIndex, colIndex);
+                row.push_back(tableCell);
                 colIndex++;
-                cell = "";
+                lineCell = "";
             } else {
-                cell += character;
+                lineCell += character;
             }
         }
 
-        row.push_back(extractCell(trim(cell), rowIndex, colIndex)->clone());
+        Cell* tableCell = CellFactory::createCell(Cell::trim(lineCell), rowIndex, colIndex);
+        row.push_back(tableCell);
 
         data.push_back(row);
         rowIndex++;

@@ -4,13 +4,13 @@
 #include <vector>
 
 class Formula: public Cell {
-    double value;
-    std::string formula;
+    double value = 0;
     bool isUpdated = false;
 
     void calculateTwoNumbers(std::stack<double>& operands, std::stack<char>& operators);
+
 public:
-    Formula(double value, const std::string formula);
+    Formula(const std::string originalString, int row, int col);
 
     void printToFile(std::ostream& os) const override;
     void print() const override;
@@ -19,6 +19,5 @@ public:
     double getNumericValue() const override;
 
     bool getIsUpdated() const;
-    std::string getFormula() const;
     void update(const std::vector<std::vector<Cell*>>& data);
 };

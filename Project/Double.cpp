@@ -1,7 +1,13 @@
 #include "Double.h"
+#include "UnknownDataTypeException.h"
 #include <iostream>
+#include <sstream>
 
-Double::Double(double value) : value(value) {}
+Double::Double(std::string str, int row, int col) : Cell(str, row, col) {
+    if (!(std::istringstream(str) >> this->value >> std::ws).eof()) {
+        throw UnknownDataTypeException(str, row, col);
+    }
+}
 
 void Double::printToFile(std::ostream& os) const {
     os << value;

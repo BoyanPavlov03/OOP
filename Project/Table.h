@@ -10,8 +10,6 @@ class Table: public CommandExecutor {
 private:
     std::vector<std::vector<Cell*>> data;
 
-    std::string trim(const std::string& str);
-    Cell* extractCell(const std::string& str, int row, int col);
     void updateFormulas();
 public:
     Table() = default;
