@@ -3,6 +3,10 @@
 
 Formula::Formula(double value, const std::string formula) : value(value), formula(formula) {}
 
+void Formula::printToFile(std::ostream& os) const {
+    os << formula;
+}
+
 void Formula::print() const {
     std::cout << value;
 }
@@ -18,7 +22,7 @@ Cell *Formula::clone() const {
     return new Formula(*this);
 }
 
-double Formula::getValue() const {
+double Formula::getNumericValue() const {
     return value;
 }
 
@@ -81,7 +85,7 @@ void Formula::update(const std::vector<std::vector<Cell*>> &data) {
                         formulaCell->update(data);
                     }
                 }
-                value = data[row][col]->getValue();
+                value = data[row][col]->getNumericValue();
             }
 
             operands.push(value);

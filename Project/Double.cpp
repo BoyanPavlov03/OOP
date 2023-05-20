@@ -3,6 +3,10 @@
 
 Double::Double(double value) : value(value) {}
 
+void Double::printToFile(std::ostream& os) const {
+    os << value;
+}
+
 void Double::print() const {
     std::cout << value;
 }
@@ -18,6 +22,6 @@ Cell *Double::clone() const {
     return new Double(*this);
 }
 
-double Double::getValue() const {
+double Double::getNumericValue() const {
     return value;
 }

@@ -2,22 +2,26 @@
 #include <vector>
 #include <string>
 #include <stack>
+#include <fstream>
 #include "Cell.h"
+#include "CommandExecutor.h"
 
-class Table {
+class Table: public CommandExecutor {
 private:
     std::vector<std::vector<Cell*>> data;
 
     std::string trim(const std::string& str);
-    std::string extractString(const std::string& str, int row, int col);
     Cell* extractCell(const std::string& str, int row, int col);
     void updateFormulas();
 public:
     Table() = default;
-    explicit Table(const std::string& fileName);
     ~Table();
 
-    void readFromFile(const std::string& fileName);
-
-    void print() const;
+    void parseCommand(const std::string& command) override;
+    void open() override;
+    void close() override;
+    void save(std::fstream& fileToSave) override;
+    void saveAs(const std::string& newName) override;
+    void print() const override;
+    void help() const override;
 };

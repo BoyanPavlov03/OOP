@@ -10,11 +10,15 @@ class Formula: public Cell {
 
     void calculateTwoNumbers(std::stack<double>& operands, std::stack<char>& operators);
 public:
-    explicit Formula(double value, const std::string formula);
+    Formula(double value, const std::string formula);
+
+    void printToFile(std::ostream& os) const override;
     void print() const override;
     std::string toString() const override;
     Cell* clone() const override;
-    double getValue() const override;
+    double getNumericValue() const override;
+
     bool getIsUpdated() const;
+    std::string getFormula() const;
     void update(const std::vector<std::vector<Cell*>>& data);
 };
