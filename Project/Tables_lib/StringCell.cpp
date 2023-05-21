@@ -1,28 +1,28 @@
-#include "String.h"
+#include "StringCell.h"
 #include "UnknownDataTypeException.h"
 #include <iostream>
 
-String::String(const std::string originalString, int row, int col) : Cell(row, col, originalString) {
+StringCell::StringCell(const std::string originalString, int row, int col) : Cell(row, col, originalString) {
     extractString(originalString, row, col);
 }
 
-void String::printToFile(std::ostream& os) const {
+void StringCell::printToFile(std::ostream& os) const {
     os << originalString;
 }
 
-void String::print() const {
+void StringCell::print() const {
     std::cout << value;
 }
 
-std::string String::toString() const {
+std::string StringCell::toString() const {
     return value;
 }
 
-Cell *String::clone() const {
-    return new String(*this);
+Cell *StringCell::clone() const {
+    return new StringCell(*this);
 }
 
-double String::getNumericValue() const {
+double StringCell::getNumericValue() const {
     double num;
     try {
         num = stod(value);
@@ -32,7 +32,7 @@ double String::getNumericValue() const {
     return num;
 }
 
-void String::extractString(const std::string& str, int row, int col) {
+void StringCell::extractString(const std::string& str, int row, int col) {
     std::string result;
 
     for(int i = 1; i < str.size() - 1; i++) {

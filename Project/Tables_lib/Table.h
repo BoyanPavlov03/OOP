@@ -28,4 +28,7 @@ public:
     void edit(const std::string cellData, const std::string coordinates) override;
 
     friend std::ostream& operator<<(std::ostream& os, const Table& table);
+    Cell* getCell(unsigned int row, unsigned int col) const;
+    unsigned int getRowsCount() const;
+    unsigned int getColsCount() const;
 };

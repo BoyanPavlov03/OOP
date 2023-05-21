@@ -1,42 +1,43 @@
-#include "Formula.h"
+#include "FormulaCell.h"
+#include "RecursiveCellException.h"
 #include <iostream>
 
-Formula::Formula(const std::string originalString, int row, int col) : Cell(row, col, originalString) {}
+FormulaCell::FormulaCell(const std::string originalString, int row, int col) : Cell(row, col, originalString) {}
 
-void Formula::printToFile(std::ostream& os) const {
+void FormulaCell::printToFile(std::ostream& os) const {
     os << originalString;
 }
 
-void Formula::print() const {
+void FormulaCell::print() const {
     std::cout << value;
 }
 
-std::string Formula::toString() const {
+std::string FormulaCell::toString() const {
     std::string str = std::to_string (value);
     str.erase ( str.find_last_not_of('0') + 1, std::string::npos );
     str.erase ( str.find_last_not_of('.') + 1, std::string::npos );
     return str;
 }
 
-Cell *Formula::clone() const {
-    return new Formula(*this);
+Cell *FormulaCell::clone() const {
+    return new FormulaCell(*this);
 }
 
-double Formula::getNumericValue() const {
+double FormulaCell::getNumericValue() const {
     return value;
 }
 
-bool Formula::getIsUpdated() const {
+bool FormulaCell::getIsUpdated() const {
     return isUpdated;
 }
 
-void Formula::setIsUpdated(bool isUpdated) {
+void FormulaCell::setIsUpdated(bool isUpdated) {
     this->isUpdated = isUpdated;
 }
 
-void Formula::update(const std::vector<std::vector<Cell*>> &data) {
+void FormulaCell::update(const std::vector<std::vector<Cell*>> &data) {
     if (isUpdated) {
-        throw std::invalid_argument("Recursive cells!");
+        throw RecursiveCellException(originalString, row, col);
     }
 
     std::stack<double> operands;
@@ -84,14 +85,21 @@ void Formula::update(const std::vector<std::vector<Cell*>> &data) {
             row--;
             col--;
 
+
+            // TODO: too many nested if's
             double cellValue = 0;
-            if (row < data.size() && col < data[row].size()) {
-                Formula* formulaCell = dynamic_cast<Formula*>(data[row][col]);
+            if (row < data.size() && col < data[row].size() && data[row][col] != nullptr) {
+                FormulaCell* formulaCell = dynamic_cast<FormulaCell*>(data[row][col]);
                 if (formulaCell != nullptr) {
+                    if (formulaCell == this) {
+                        throw RecursiveCellException(originalString, row, col);
+                    }
+
                     if (!formulaCell->isUpdated) {
                         formulaCell->update(data);
                     }
                 }
+
                 cellValue = data[row][col]->getNumericValue();
             }
 
@@ -108,7 +116,7 @@ void Formula::update(const std::vector<std::vector<Cell*>> &data) {
     isUpdated = true;
 }
 
-void Formula::calculateTwoNumbers(std::stack<double>& operands, std::stack<char>& operators) {
+void FormulaCell::calculateTwoNumbers(std::stack<double>& operands, std::stack<char>& operators) {
     double op2 = operands.top();
     operands.pop();
     double op1 = operands.top();

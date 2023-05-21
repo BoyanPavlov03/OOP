@@ -3,14 +3,14 @@
 #include <stack>
 #include <vector>
 
-class Formula: public Cell {
+class FormulaCell: public Cell {
     double value = 0;
     bool isUpdated = false;
 
     void calculateTwoNumbers(std::stack<double>& operands, std::stack<char>& operators);
 
 public:
-    Formula(const std::string originalString, int row, int col);
+    FormulaCell(const std::string originalString, int row, int col);
 
     void printToFile(std::ostream& os) const override;
     void print() const override;

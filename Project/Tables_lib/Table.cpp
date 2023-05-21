@@ -1,6 +1,6 @@
 #include "Table.h"
-#include "String.h"
-#include "Formula.h"
+#include "StringCell.h"
+#include "FormulaCell.h"
 #include "CellFactory.h"
 #include "UnknownDataTypeException.h"
 #include <iostream>
@@ -21,15 +21,15 @@ void Table::updateFormulasAndCalculateWidths() {
                 continue;
             }
 
+            auto* formula = dynamic_cast<FormulaCell*>(data[i][j]);
+            if (formula != nullptr && !formula->getIsUpdated()) {
+                formula->update(data);
+            }
+
             if (widthsOfEachColumns.size() <= j) {
                 widthsOfEachColumns.push_back(data[i][j]->toString().size());
             } else if (data[i][j]->toString().size() > widthsOfEachColumns[j]) {
                 widthsOfEachColumns[j] = data[i][j]->toString().size();
-            }
-
-            auto* formula = dynamic_cast<Formula*>(data[i][j]);
-            if (formula != nullptr && !formula->getIsUpdated()) {
-                formula->update(data);
             }
         }
     }
@@ -38,7 +38,7 @@ void Table::updateFormulasAndCalculateWidths() {
 void Table::setFormulasAsNotCalculated() {
     for (auto & row : data) {
         for (auto & cell : row) {
-            auto* formula = dynamic_cast<Formula*>(cell);
+            auto* formula = dynamic_cast<FormulaCell*>(cell);
             if (formula != nullptr) {
                 formula->setIsUpdated(false);
             }
@@ -57,6 +57,7 @@ void Table::parseCommand(const std::string &command) {
     }
 
     if (commandName == "open") {
+        // TODO: Check for quotes
         iss.ignore();
         std::getline(iss, fileName);
         open();
@@ -133,11 +134,12 @@ void Table::open() {
 
         for (const auto& character : line) {
             if (character == ',') {
-                if (Cell::trim(lineCell).empty()) {
+                std::string trimmed = Cell::trim(lineCell);
+                if (trimmed.empty()) {
                     row.resize(row.size() + 1);
                     continue;
                 }
-                Cell* tableCell = CellFactory::createCell(Cell::trim(lineCell), rowIndex, colIndex);
+                Cell* tableCell = CellFactory::createCell(trimmed, rowIndex, colIndex)->clone();
                 row.push_back(tableCell);
                 colIndex++;
 
@@ -147,7 +149,7 @@ void Table::open() {
             }
         }
 
-        Cell* tableCell = CellFactory::createCell(Cell::trim(lineCell), rowIndex, colIndex);
+        Cell* tableCell = CellFactory::createCell(Cell::trim(lineCell), rowIndex, colIndex)->clone();
         row.push_back(tableCell);
 
         if (row.size() > biggestRow) {
@@ -245,4 +247,20 @@ std::ostream &operator<<(std::ostream &os, const Table &table) {
     }
 
     return os;
+}
+
+Cell* Table::getCell(unsigned int row, unsigned int col) const {
+   if (row >= data.size() || col >= data[row].size()) {
+        return nullptr;
+    }
+
+    return data[row][col];
+}
+
+unsigned int Table::getRowsCount() const {
+    return data.size();
+}
+
+unsigned int Table::getColsCount() const {
+    return biggestRow;
 }
