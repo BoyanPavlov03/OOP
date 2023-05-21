@@ -1,6 +1,6 @@
 #include "Cell.h"
 
-Cell::Cell(std::string originalString, int row, int col) : originalString(originalString), row(row), col(col) {}
+Cell::Cell(int row, int col, std::string originalString) : originalString(originalString), row(row), col(col) {}
 
 std::ostream &operator<<(std::ostream &os, const Cell &cell) {
     cell.printToFile(os);

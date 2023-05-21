@@ -1,7 +1,7 @@
 #include "Formula.h"
 #include <iostream>
 
-Formula::Formula(const std::string originalString, int row, int col) : Cell(originalString, row, col) {}
+Formula::Formula(const std::string originalString, int row, int col) : Cell(row, col, originalString) {}
 
 void Formula::printToFile(std::ostream& os) const {
     os << originalString;
@@ -28,6 +28,10 @@ double Formula::getNumericValue() const {
 
 bool Formula::getIsUpdated() const {
     return isUpdated;
+}
+
+void Formula::setIsUpdated(bool isUpdated) {
+    this->isUpdated = isUpdated;
 }
 
 void Formula::update(const std::vector<std::vector<Cell*>> &data) {
@@ -76,6 +80,9 @@ void Formula::update(const std::vector<std::vector<Cell*>> &data) {
                 col = col * 10 + (originalString[i] - '0');
                 i++;
             }
+
+            row--;
+            col--;
 
             double cellValue = 0;
             if (row < data.size() && col < data[row].size()) {

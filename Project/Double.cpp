@@ -3,7 +3,7 @@
 #include <iostream>
 #include <sstream>
 
-Double::Double(std::string str, int row, int col) : Cell(str, row, col) {
+Double::Double(std::string str, int row, int col) : Cell(row, col, str) {
     if (!(std::istringstream(str) >> this->value >> std::ws).eof()) {
         throw UnknownDataTypeException(str, row, col);
     }

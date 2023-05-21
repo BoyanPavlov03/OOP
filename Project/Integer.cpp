@@ -2,7 +2,7 @@
 #include "UnknownDataTypeException.h"
 #include <iostream>
 
-Integer::Integer(const std::string originalString, int row, int col) : Cell(originalString, row, col) {
+Integer::Integer(const std::string originalString, int row, int col) : Cell(row, col, originalString) {
     try {
         value = std::stoi(originalString);
     } catch (...) {

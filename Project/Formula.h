@@ -19,5 +19,6 @@ public:
     double getNumericValue() const override;
 
     bool getIsUpdated() const;
+    void setIsUpdated(bool isUpdated);
     void update(const std::vector<std::vector<Cell*>>& data);
 };

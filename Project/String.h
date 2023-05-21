@@ -16,4 +16,3 @@ public:
 
     void extractString(const std::string& str, int row, int col);
 };
-

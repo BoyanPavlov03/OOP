@@ -9,17 +9,23 @@
 class Table: public CommandExecutor {
 private:
     std::vector<std::vector<Cell*>> data;
+    std::vector<unsigned int> widthsOfEachColumns;
+    unsigned int biggestRow = 0;
 
-    void updateFormulas();
+    void updateFormulasAndCalculateWidths();
+    void setFormulasAsNotCalculated();
+
 public:
-    Table() = default;
     ~Table();
 
     void parseCommand(const std::string& command) override;
     void open() override;
     void close() override;
-    void save(std::fstream& fileToSave) override;
+    void save() override;
     void saveAs(const std::string& newName) override;
     void print() const override;
     void help() const override;
+    void edit(const std::string cellData, const std::string coordinates) override;
+
+    friend std::ostream& operator<<(std::ostream& os, const Table& table);
 };

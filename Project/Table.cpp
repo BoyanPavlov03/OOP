@@ -1,7 +1,5 @@
 #include "Table.h"
 #include "String.h"
-#include "Integer.h"
-#include "Double.h"
 #include "Formula.h"
 #include "CellFactory.h"
 #include "UnknownDataTypeException.h"
@@ -16,12 +14,33 @@ Table::~Table() {
     }
 }
 
-void Table::updateFormulas() {
+void Table::updateFormulasAndCalculateWidths() {
+    for (int i = 0; i < data.size(); i++) {
+        for (int j = 0; j < data[i].size(); j++) {
+            if (data[i][j] == nullptr) {
+                continue;
+            }
+
+            if (widthsOfEachColumns.size() <= j) {
+                widthsOfEachColumns.push_back(data[i][j]->toString().size());
+            } else if (data[i][j]->toString().size() > widthsOfEachColumns[j]) {
+                widthsOfEachColumns[j] = data[i][j]->toString().size();
+            }
+
+            auto* formula = dynamic_cast<Formula*>(data[i][j]);
+            if (formula != nullptr && !formula->getIsUpdated()) {
+                formula->update(data);
+            }
+        }
+    }
+}
+
+void Table::setFormulasAsNotCalculated() {
     for (auto & row : data) {
         for (auto & cell : row) {
             auto* formula = dynamic_cast<Formula*>(cell);
-            if (formula != nullptr && !formula->getIsUpdated()) {
-                formula->update(data);
+            if (formula != nullptr) {
+                formula->setIsUpdated(false);
             }
         }
     }
@@ -32,7 +51,7 @@ void Table::parseCommand(const std::string &command) {
     std::string commandName;
     iss >> commandName;
 
-    if (!file.is_open() && commandName != "open" && commandName != "help") {
+    if (!isCurrentyOpenedFile && commandName != "open" && commandName != "help") {
         std::cout << "No file is currently open." << std::endl;
         return;
     }
@@ -44,7 +63,7 @@ void Table::parseCommand(const std::string &command) {
     } else if (commandName == "close") {
         close();
     } else if (commandName == "save") {
-        save(file);
+        save();
     } else if (commandName == "saveas") {
         std::string newName;
         iss.ignore();
@@ -53,12 +72,12 @@ void Table::parseCommand(const std::string &command) {
     } else if (commandName == "help") {
         help();
     } else if (commandName == "edit") {
-        /*
-        Edits the value of a cell.
-        The cell is given by its coordinates and the new value.
-        The value can be a number, a string or a formula.
-        If the value is a formula, it is recalculated and the result is saved.
-        */
+        std::string coordinates;
+        iss >> coordinates;
+        std::string cellData;
+        iss.ignore();
+        std::getline(iss, cellData);
+        edit(Cell::trim(cellData), Cell::trim(coordinates));
     } else if (commandName == "print") {
         print();
     } else {
@@ -73,39 +92,36 @@ void Table::saveAs(const std::string &newName) {
         return;
     }
 
-    save(newFile);
+    newFile << *this;
 
     newFile.close();
     std::cout << "Successfully saved " << newName << std::endl;
 }
 
-void Table::save(std::fstream& fileToSave) {
-    for (const auto& row : data) {
-        for (const auto& cell : row) {
-            fileToSave << cell->toString() << ",";
-        }
-        fileToSave << std::endl;
+void Table::save() {
+    std::ofstream file(fileName);
+    if (!file.is_open()) {
+        std::cout << "Error saving file: " << fileName << std::endl;
+        return;
     }
-
+    file << *this;
+    file.close();
     std::cout << "Successfully saved " << fileName << std::endl;
 }
 
 void Table::close() {
-    if (file.is_open()) {
-        file.close();
-        data.clear();
-        std::cout << "Successfully closed " << fileName << std::endl;
-    } else {
-        std::cout << "No file is currently open." << std::endl;
-    }
+    data.clear();
+    fileName = "";
+    std::cout << "Successfully closed " << fileName << std::endl;
 }
 
 void Table::open() {
-    file = std::fstream(fileName);
+    std::ifstream file(fileName);
     if (!file.is_open()) {
         std::cout << "Error opening file: " << fileName << std::endl;
         return;
     }
+    isCurrentyOpenedFile = true;
 
     std::string line;
     int rowIndex = 1;
@@ -117,9 +133,14 @@ void Table::open() {
 
         for (const auto& character : line) {
             if (character == ',') {
+                if (Cell::trim(lineCell).empty()) {
+                    row.resize(row.size() + 1);
+                    continue;
+                }
                 Cell* tableCell = CellFactory::createCell(Cell::trim(lineCell), rowIndex, colIndex);
                 row.push_back(tableCell);
                 colIndex++;
+
                 lineCell = "";
             } else {
                 lineCell += character;
@@ -129,48 +150,37 @@ void Table::open() {
         Cell* tableCell = CellFactory::createCell(Cell::trim(lineCell), rowIndex, colIndex);
         row.push_back(tableCell);
 
+        if (row.size() > biggestRow) {
+            biggestRow = row.size();
+        }
+
         data.push_back(row);
         rowIndex++;
         colIndex = 1;
     }
 
-    updateFormulas();
+    file.close();
+
+    updateFormulasAndCalculateWidths();
     std::cout << "Successfully opened " << fileName << std::endl;
 }
 
 void Table::help() const {
     std::cout << "The following commands are supported:" << std::endl;
-    std::cout << "open <file>     opens <file>" << std::endl;
-    std::cout << "print           prints the currently opened file" << std::endl;
-    std::cout << "edit <coord>    edits the cell at <coord>" << std::endl;
-    std::cout << "close           closes currently opened file" << std::endl;
-    std::cout << "save            saves the currently open file" << std::endl;
-    std::cout << "saveas <file>   saves the currently open file in <file>" << std::endl;
-    std::cout << "help            prints this information" << std::endl;
-    std::cout << "exit            exists the program" << std::endl;
+    std::cout << "open <file>             opens <file>" << std::endl;
+    std::cout << "print                   prints the currently opened file" << std::endl;
+    std::cout << "edit <coord> <value>    edits the cell at <coord>" << std::endl;
+    std::cout << "close                   closes currently opened file" << std::endl;
+    std::cout << "save                    saves the currently open file" << std::endl;
+    std::cout << "saveas <file>           saves the currently open file in <file>" << std::endl;
+    std::cout << "help                    prints this information" << std::endl;
+    std::cout << "exit                    exists the program" << std::endl;
 }
 
 void Table::print() const {
-    std::vector<unsigned int> widthsOfEachColumns;
-    unsigned int biggestRow = 0;
-
-    for (int i = 0; i < data.size(); i++) {
-        if (data[i].size() > biggestRow) {
-            biggestRow = data[i].size();
-        }
-
-        for (int j = 0; j < data[i].size(); j++) {
-            if (widthsOfEachColumns.size() <= j) {
-                widthsOfEachColumns.push_back(data[i][j]->toString().size());
-            } else if (data[i][j]->toString().size() > widthsOfEachColumns[j]) {
-                widthsOfEachColumns[j] = data[i][j]->toString().size();
-            }
-        }
-    }
-
     for (int i = 0; i < data.size(); i++) {
         for (int j = 0; j < biggestRow; j++) {
-            if (data[i].size() <= j) {
+            if (data[i][j] == nullptr || data[i].size() <= j) {
                 std::cout << std::string(widthsOfEachColumns[j] + 2, ' ') << "|";
             } else {
                 std::cout << " ";
@@ -180,4 +190,59 @@ void Table::print() const {
         }
         std::cout << std::endl;
     }
+}
+
+void Table::edit(const std::string cellData, const std::string coordinates) {
+    int i = 1, row = 0, col = 0;
+    while (i < coordinates.length() && coordinates[i] >= '0' && coordinates[i] <= '9') {
+        row = row * 10 + (coordinates[i] - '0');
+        i++;
+    }
+
+    i++;
+    while (i < coordinates.length() && coordinates[i] >= '0' && coordinates[i] <= '9') {
+        col = col * 10 + (coordinates[i] - '0');
+        i++;
+    }
+
+    if (row >= data.size()) {
+        data.resize(row);
+    }
+
+    if (col >= data[row - 1].size()) {
+        data[row - 1].resize(col);
+    } else {
+        delete data[row - 1][col - 1];
+    }
+
+    Cell* cell = CellFactory::createCell(cellData, row, col);
+
+    data[row - 1][col - 1] = cell->clone();
+
+    if (data[row - 1].size() > biggestRow) {
+        biggestRow = data[row - 1].size();
+    }
+
+    setFormulasAsNotCalculated();
+    updateFormulasAndCalculateWidths();
+    std::cout << "Successfully edited cell " << coordinates << std::endl;
+}
+
+std::ostream &operator<<(std::ostream &os, const Table &table) {
+    for (const auto& row : table.data) {
+        for (const auto& cell : row) {
+            if (cell == nullptr) {
+                os << ", ";
+                continue;
+            }
+
+            os << *cell;
+            if (cell != row.back()) {
+                os << ", ";
+            }
+        }
+        os << std::endl;
+    }
+
+    return os;
 }

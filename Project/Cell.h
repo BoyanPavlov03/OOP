@@ -8,7 +8,7 @@ protected:
     int row;
     int col;
 
-    Cell(std::string originalString, int row, int col);
+    Cell(int row, int col, std::string originalString = "");
 
 public:
     virtual ~Cell() = default;

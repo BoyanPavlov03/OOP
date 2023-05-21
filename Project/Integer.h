@@ -13,4 +13,3 @@ public:
     Cell* clone() const override;
     double getNumericValue() const override;
 };
-

@@ -2,7 +2,7 @@
 #include "UnknownDataTypeException.h"
 #include <iostream>
 
-String::String(const std::string originalString, int row, int col) : Cell(originalString, row, col) {
+String::String(const std::string originalString, int row, int col) : Cell(row, col, originalString) {
     extractString(originalString, row, col);
 }
 
