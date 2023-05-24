@@ -31,4 +31,7 @@ public:
     Cell* getCell(unsigned int row, unsigned int col) const;
     unsigned int getRowsCount() const;
     unsigned int getColsCount() const;
+    std::vector<std::vector<Cell*>> getData() const;
+    void deleteCellsData();
+    unsigned int getColWidth(int col);
 };

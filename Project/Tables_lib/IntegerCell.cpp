@@ -14,10 +14,6 @@ void IntegerCell::printToFile(std::ostream& os) const {
     os << value;
 }
 
-void IntegerCell::print() const {
-    std::cout << value;
-}
-
 std::string IntegerCell::toString() const {
     return std::to_string(value);
 }

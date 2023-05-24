@@ -1,10 +1,11 @@
 #include "Table.h"
 #include "StringCell.h"
-#include "FormulaCell.h"
 #include "CellFactory.h"
+#include "NullCell.h"
 #include "UnknownDataTypeException.h"
 #include <iostream>
 #include <sstream>
+#include <vector>
 
 Table::~Table() {
     for (auto& row : data) {
@@ -16,14 +17,18 @@ Table::~Table() {
 
 void Table::updateFormulasAndCalculateWidths() {
     for (int i = 0; i < data.size(); i++) {
-        for (int j = 0; j < data[i].size(); j++) {
+        if (data[i].size() < biggestRow) {
+            data[i].resize(biggestRow);
+        }
+
+        for (int j = 0; j < biggestRow; j++) {
             if (data[i][j] == nullptr) {
+                data[i][j] = new NullCell(i + 1, j + 1);
                 continue;
             }
 
-            auto* formula = dynamic_cast<FormulaCell*>(data[i][j]);
-            if (formula != nullptr && !formula->getIsUpdated()) {
-                formula->update(data);
+            if (!data[i][j]->getIsUpdated()) {
+                data[i][j]->update(data);
             }
 
             if (widthsOfEachColumns.size() <= j) {
@@ -38,10 +43,7 @@ void Table::updateFormulasAndCalculateWidths() {
 void Table::setFormulasAsNotCalculated() {
     for (auto & row : data) {
         for (auto & cell : row) {
-            auto* formula = dynamic_cast<FormulaCell*>(cell);
-            if (formula != nullptr) {
-                formula->setIsUpdated(false);
-            }
+            cell->setIsUpdated(false);
         }
     }
 }
@@ -51,16 +53,37 @@ void Table::parseCommand(const std::string &command) {
     std::string commandName;
     iss >> commandName;
 
-    if (!isCurrentyOpenedFile && commandName != "open" && commandName != "help") {
-        std::cout << "No file is currently open." << std::endl;
+    if (!std::count(CommandExecutor::commands.begin(), CommandExecutor::commands.end(), commandName)) {
+        std::cout << "Unknown command: " << commandName << std::endl;
+        return;
+    }
+
+    if (!isCurrentlyOpenedFile && commandName != "open" && commandName != "help") {
+        std::cout << "No file is currently opened." << std::endl;
         return;
     }
 
     if (commandName == "open") {
-        // TODO: Check for quotes
         iss.ignore();
         std::getline(iss, fileName);
+
+        std::stringstream ss(fileName);
+        std::vector<std::string> words;
+        std::string word;
+        while (std::getline(ss, word, ' ')) {
+            words.push_back(word);
+        }
+
+        if (words.size() > 1 && fileName[0] == '\"' && fileName[fileName.size() - 1] == '\"') {
+            fileName = fileName.substr(1, fileName.size() - 2);
+        } else if (words.size() > 1) {
+            std::cout << "Invalid file name." << std::endl;
+            return;
+        }
+
         open();
+    } else if (commandName == "help") {
+        help();
     } else if (commandName == "close") {
         close();
     } else if (commandName == "save") {
@@ -70,8 +93,6 @@ void Table::parseCommand(const std::string &command) {
         iss.ignore();
         std::getline(iss, newName);
         saveAs(newName);
-    } else if (commandName == "help") {
-        help();
     } else if (commandName == "edit") {
         std::string coordinates;
         iss >> coordinates;
@@ -81,13 +102,11 @@ void Table::parseCommand(const std::string &command) {
         edit(Cell::trim(cellData), Cell::trim(coordinates));
     } else if (commandName == "print") {
         print();
-    } else {
-        std::cout << "Unknown command: " << commandName << std::endl;
     }
 }
 
 void Table::saveAs(const std::string &newName) {
-    std::fstream newFile(newName);
+    std::ofstream newFile(newName);
     if (!newFile.is_open()) {
         std::cout << "Error opening file: " << newName << std::endl;
         return;
@@ -111,8 +130,9 @@ void Table::save() {
 }
 
 void Table::close() {
-    data.clear();
+    deleteCellsData();
     fileName = "";
+    isCurrentlyOpenedFile = false;
     std::cout << "Successfully closed " << fileName << std::endl;
 }
 
@@ -122,7 +142,7 @@ void Table::open() {
         std::cout << "Error opening file: " << fileName << std::endl;
         return;
     }
-    isCurrentyOpenedFile = true;
+    isCurrentlyOpenedFile = true;
 
     std::string line;
     int rowIndex = 1;
@@ -135,10 +155,7 @@ void Table::open() {
         for (const auto& character : line) {
             if (character == ',') {
                 std::string trimmed = Cell::trim(lineCell);
-                if (trimmed.empty()) {
-                    row.resize(row.size() + 1);
-                    continue;
-                }
+
                 Cell* tableCell = CellFactory::createCell(trimmed, rowIndex, colIndex)->clone();
                 row.push_back(tableCell);
                 colIndex++;
@@ -173,8 +190,8 @@ void Table::help() const {
     std::cout << "print                   prints the currently opened file" << std::endl;
     std::cout << "edit <coord> <value>    edits the cell at <coord>" << std::endl;
     std::cout << "close                   closes currently opened file" << std::endl;
-    std::cout << "save                    saves the currently open file" << std::endl;
-    std::cout << "saveas <file>           saves the currently open file in <file>" << std::endl;
+    std::cout << "save                    saves the currently opened file" << std::endl;
+    std::cout << "saveas <file>           saves the currently opened file in <file>" << std::endl;
     std::cout << "help                    prints this information" << std::endl;
     std::cout << "exit                    exists the program" << std::endl;
 }
@@ -182,12 +199,12 @@ void Table::help() const {
 void Table::print() const {
     for (int i = 0; i < data.size(); i++) {
         for (int j = 0; j < biggestRow; j++) {
-            if (data[i][j] == nullptr || data[i].size() <= j) {
+            if (dynamic_cast<NullCell*>(data[i][j]) != nullptr || data[i].size() <= j) {
                 std::cout << std::string(widthsOfEachColumns[j] + 2, ' ') << "|";
             } else {
-                std::cout << " ";
-                data[i][j]->print();
-                std::cout << std::string(widthsOfEachColumns[j] - data[i][j]->toString().size(), ' ') << " |";
+                std::cout << " " << data[i][j]->toString()
+                          << std::string(widthsOfEachColumns[j] - data[i][j]->toString().size(), ' ')
+                          << " |";
             }
         }
         std::cout << std::endl;
@@ -208,11 +225,15 @@ void Table::edit(const std::string cellData, const std::string coordinates) {
     }
 
     if (row >= data.size()) {
-        data.resize(row);
+        data.resize(row, std::vector<Cell*>());
     }
 
     if (col >= data[row - 1].size()) {
+        unsigned int currentSize = data[row - 1].size();
         data[row - 1].resize(col);
+        for (int j = currentSize; j < data[row - 1].size(); j++) {
+            data[row - 1][j] = new NullCell(row, j + 1);
+        }
     } else {
         delete data[row - 1][col - 1];
     }
@@ -233,11 +254,6 @@ void Table::edit(const std::string cellData, const std::string coordinates) {
 std::ostream &operator<<(std::ostream &os, const Table &table) {
     for (const auto& row : table.data) {
         for (const auto& cell : row) {
-            if (cell == nullptr) {
-                os << ", ";
-                continue;
-            }
-
             os << *cell;
             if (cell != row.back()) {
                 os << ", ";
@@ -250,8 +266,9 @@ std::ostream &operator<<(std::ostream &os, const Table &table) {
 }
 
 Cell* Table::getCell(unsigned int row, unsigned int col) const {
-   if (row >= data.size() || col >= data[row].size()) {
-        return nullptr;
+    if (row >= data.size() || col >= data[row].size()) {
+        // TODO: create custom exception
+        throw std::out_of_range("Error: row " + std::to_string(row) + ", col " + std::to_string(col) + ", out of range");
     }
 
     return data[row][col];
@@ -264,3 +281,22 @@ unsigned int Table::getRowsCount() const {
 unsigned int Table::getColsCount() const {
     return biggestRow;
 }
+
+std::vector<std::vector<Cell*>> Table::getData() const {
+    return data;
+}
+
+unsigned int Table::getColWidth(int col) {
+    if (col >= widthsOfEachColumns.size()) {
+        return 0;
+    }
+
+    return widthsOfEachColumns[col];
+}
+
+void Table::deleteCellsData() {
+    data.clear();
+    biggestRow = 0;
+    widthsOfEachColumns.clear();
+}
+

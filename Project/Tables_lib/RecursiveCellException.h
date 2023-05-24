@@ -7,7 +7,7 @@ class RecursiveCellException : public std::exception {
 
 public:
     RecursiveCellException(const std::string& str, int row, int col)
-            : message_("Error: row " + std::to_string(row + 1) + ", col " + std::to_string(col + 1) + ", " + str + " is a recursive formula.") {}
+            : message_("Error: row " + std::to_string(row) + ", col " + std::to_string(col) + ", " + str + " is a recursive formula.") {}
 
     const char* what() const noexcept override {
         return message_.c_str();

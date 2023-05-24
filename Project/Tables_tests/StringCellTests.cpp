@@ -27,15 +27,6 @@ TEST_F(StringCellTests, printToFile) {
     EXPECT_EQ(ss.str(), "\"abc\"");
 }
 
-TEST_F(StringCellTests, print) {
-    StringCell s("\"abc\"", 1, 1);
-    std::stringstream ss;
-    testing::internal::CaptureStdout();
-    s.print();
-    std::string output = testing::internal::GetCapturedStdout();
-    EXPECT_EQ(output, "abc");
-}
-
 TEST_F(StringCellTests, toString) {
     StringCell s("\"abc\"", 1, 1);
     EXPECT_EQ(s.toString(), "abc");

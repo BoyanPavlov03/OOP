@@ -1,10 +1,11 @@
 #pragma once
 #include <string>
+#include <vector>
 
 class CommandExecutor {
 protected:
     std::string fileName;
-    bool isCurrentyOpenedFile = false;
+    bool isCurrentlyOpenedFile = false;
 
 public:
     virtual void parseCommand(const std::string& command) = 0;
@@ -17,4 +18,6 @@ public:
     virtual void print() const = 0;
     virtual void help() const = 0;
     virtual void edit(const std::string cellData, const std::string coordinates) = 0;
+
+    static std::vector<std::string> commands;
 };

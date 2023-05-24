@@ -29,14 +29,6 @@ TEST_F(IntegerCellTests, printToFile) {
     EXPECT_EQ(ss.str(), "123");
 }
 
-TEST_F(IntegerCellTests, print) {
-    std::stringstream ss;
-    testing::internal::CaptureStdout();
-    integer->print();
-    std::string output = testing::internal::GetCapturedStdout();
-    EXPECT_EQ(output, "123");
-}
-
 TEST_F(IntegerCellTests, toString) {
     EXPECT_EQ(integer->toString(), "123");
 }

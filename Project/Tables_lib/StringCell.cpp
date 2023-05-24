@@ -10,10 +10,6 @@ void StringCell::printToFile(std::ostream& os) const {
     os << originalString;
 }
 
-void StringCell::print() const {
-    std::cout << value;
-}
-
 std::string StringCell::toString() const {
     return value;
 }
@@ -46,8 +42,6 @@ void StringCell::extractString(const std::string& str, int row, int col) {
             } else {
                 throw UnknownDataTypeException(str, row, col);
             }
-        } else if (str[i] == '\\' && i + 1 >= str.size() - 1) {
-            throw UnknownDataTypeException(str, row, col);
         } else {
             result += str[i];
         }

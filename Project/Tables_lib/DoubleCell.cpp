@@ -13,10 +13,6 @@ void DoubleCell::printToFile(std::ostream& os) const {
     os << value;
 }
 
-void DoubleCell::print() const {
-    std::cout << value;
-}
-
 std::string DoubleCell::toString() const {
     std::string str = std::to_string (value);
     str.erase ( str.find_last_not_of('0') + 1, std::string::npos );
