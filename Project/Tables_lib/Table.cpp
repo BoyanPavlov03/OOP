@@ -2,7 +2,7 @@
 #include "StringCell.h"
 #include "CellFactory.h"
 #include "NullCell.h"
-#include "UnknownDataTypeException.h"
+#include "Exceptions/UnknownDataTypeException.h"
 #include <iostream>
 #include <sstream>
 #include <vector>
@@ -267,8 +267,7 @@ std::ostream &operator<<(std::ostream &os, const Table &table) {
 
 Cell* Table::getCell(unsigned int row, unsigned int col) const {
     if (row >= data.size() || col >= data[row].size()) {
-        // TODO: create custom exception
-        throw std::out_of_range("Error: row " + std::to_string(row) + ", col " + std::to_string(col) + ", out of range");
+        return new NullCell(row, col);
     }
 
     return data[row][col];

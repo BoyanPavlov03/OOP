@@ -4,7 +4,7 @@
 #include "FormulaCell.h"
 #include "IntegerCell.h"
 #include "NullCell.h"
-#include "UnknownDataTypeException.h"
+#include "Exceptions/UnknownDataTypeException.h"
 
 Cell* CellFactory::createCell(const std::string& str, int row, int col) {
     if (str == "") {

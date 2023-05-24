@@ -1,5 +1,6 @@
 #include "FormulaCell.h"
-#include "RecursiveCellException.h"
+#include "Exceptions/RecursiveCellException.h"
+#include "Exceptions/InvalidFormulaException.h"
 #include <iostream>
 
 FormulaCell::FormulaCell(const std::string originalString, int row, int col) : Cell(row, col, originalString) {}
@@ -33,7 +34,7 @@ void FormulaCell::update(const std::vector<std::vector<Cell*>> &data) {
     std::stack<double> operands;
     std::stack<char> operators;
 
-    for (int i = 0; i < originalString.length(); i++) {
+    for (int i = 1; i < originalString.length(); i++) {
         if (originalString[i] >= '0' && originalString[i] <= '9') {
             double num = 0;
             while (i < originalString.length() && originalString[i] >= '0' && originalString[i] <= '9') {
@@ -47,8 +48,7 @@ void FormulaCell::update(const std::vector<std::vector<Cell*>> &data) {
         } else if (originalString[i] == ')') {
             do {
                 if (operators.empty() || operands.size() < 2) {
-                    // TODO: custom exception
-                    throw std::invalid_argument("Invalid formula!");
+                    throw InvalidFormulaException(originalString, row, col);
                 }
 
                 calculateTwoNumbers(operands, operators);
@@ -56,42 +56,24 @@ void FormulaCell::update(const std::vector<std::vector<Cell*>> &data) {
 
             operators.pop();
         } else if (originalString[i] == 'R') {
-
-            i++;
-            int row = 0;
-            while (i < originalString.length() && originalString[i] >= '0' && originalString[i] <= '9') {
-                row = row * 10 + (originalString[i] - '0');
-                i++;
-            }
-
-            i++;
-            int col = 0;
-            while (i < originalString.length() && originalString[i] >= '0' && originalString[i] <= '9') {
-                col = col * 10 + (originalString[i] - '0');
-                i++;
-            }
-
-            row--;
-            col--;
-
-
-            // TODO: too many nested if's
-            double cellValue = 0;
-            if (row < data.size() && col < data[row].size() && data[row][col] != nullptr) {
-                if (!data[row][col]->getIsUpdated()) {
-                    data[row][col]->update(data);
-                }
-
-                cellValue = data[row][col]->getNumericValue();
-            }
-
-            operands.push(cellValue);
+            operands.push(getCellValue(data, i));
             i--;
+        } else if (originalString[i] == ' ') {
+            continue;
+        } else {
+            throw InvalidFormulaException(originalString, row, col);
         }
     }
 
     while (!operators.empty()) {
+        if (operands.size() < 2) {
+            throw InvalidFormulaException(originalString, row, col);
+        }
         calculateTwoNumbers(operands, operators);
+    }
+
+    if (operands.size() != 1) {
+        throw InvalidFormulaException(originalString, row, col);
     }
 
     value = operands.top();
@@ -118,4 +100,35 @@ void FormulaCell::calculateTwoNumbers(std::stack<double>& operands, std::stack<c
         result = op1 / op2;
     }
     operands.push(result);
+}
+
+double FormulaCell::getCellValue(const std::vector<std::vector<Cell *>> &data, int &index) {
+    index++;
+    int row = 0;
+    while (index < originalString.length() && originalString[index] >= '0' && originalString[index] <= '9') {
+        row = row * 10 + (originalString[index] - '0');
+        index++;
+    }
+
+    index++;
+    int col = 0;
+    while (index < originalString.length() && originalString[index] >= '0' && originalString[index] <= '9') {
+        col = col * 10 + (originalString[index] - '0');
+        index++;
+    }
+
+    row--;
+    col--;
+
+
+    double cellValue = 0;
+    if (row < data.size() && col < data[row].size()) {
+        if (!data[row][col]->getIsUpdated()) {
+            data[row][col]->update(data);
+        }
+
+        cellValue = data[row][col]->getNumericValue();
+    }
+
+    return cellValue;
 }

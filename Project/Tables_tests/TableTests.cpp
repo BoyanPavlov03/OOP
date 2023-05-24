@@ -5,8 +5,8 @@
 #include "StringCell.h"
 #include "NullCell.h"
 #include "Cell.h"
-#include "UnknownDataTypeException.h"
-#include "RecursiveCellException.h"
+#include "Exceptions/UnknownDataTypeException.h"
+#include "Exceptions/RecursiveCellException.h"
 #include <vector>
 
 class TableTests : public ::testing::Test {
@@ -246,13 +246,8 @@ TEST_F(TableTests, openFIleWithSpaceInNameWithQuotes) {
 
 TEST_F(TableTests, accessCellThatIsOutOfBounds) {
     table->parseCommand("open ../../resources/file1.txt");
-    try {
-        table->getCell(5,5);
-    } catch (std::out_of_range& e) {
-        std::string exceptionMessage = e.what();
-
-        EXPECT_EQ(exceptionMessage, "Error: row 5, col 5, out of range");
-    }
+    Cell* cell = table->getCell(5,5);
+    EXPECT_TRUE(dynamic_cast<NullCell*>(cell) != nullptr);
 }
 
 TEST_F(TableTests, closeFile) {
@@ -378,6 +373,6 @@ TEST_F(TableTests, recursiveFormulas) {
     } catch (RecursiveCellException& e) {
         std::string exceptionMessage = e.what();
 
-        EXPECT_EQ(exceptionMessage, "Error: row 1, col 3, =R2C2 is a recursive formula.");
+        EXPECT_EQ(exceptionMessage, "Error: row 1, col 3, =R2C2 is a recursive formula");
     }
 }

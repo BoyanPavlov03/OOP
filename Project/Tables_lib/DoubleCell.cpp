@@ -1,5 +1,5 @@
 #include "DoubleCell.h"
-#include "UnknownDataTypeException.h"
+#include "Exceptions/UnknownDataTypeException.h"
 #include <iostream>
 #include <sstream>
 

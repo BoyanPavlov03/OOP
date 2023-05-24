@@ -1,5 +1,5 @@
 #include "StringCell.h"
-#include "UnknownDataTypeException.h"
+#include "Exceptions/UnknownDataTypeException.h"
 #include <iostream>
 
 StringCell::StringCell(const std::string originalString, int row, int col) : Cell(row, col, originalString) {

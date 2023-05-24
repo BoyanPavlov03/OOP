@@ -8,6 +8,7 @@ class FormulaCell: public Cell {
     bool isCurrentlyUpdating = false;
 
     void calculateTwoNumbers(std::stack<double>& operands, std::stack<char>& operators);
+    double getCellValue(const std::vector<std::vector<Cell*>>& data, int& index);
 
 public:
     FormulaCell(const std::string originalString, int row, int col);

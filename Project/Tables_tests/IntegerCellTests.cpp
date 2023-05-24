@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 #include "IntegerCell.h"
-#include "UnknownDataTypeException.h"
+#include "Exceptions/UnknownDataTypeException.h"
 
 class IntegerCellTests : public ::testing::Test {
 protected:
@@ -20,7 +20,13 @@ TEST_F(IntegerCellTests, constructor) {
 }
 
 TEST_F(IntegerCellTests, constructorWithInvalidString) {
-    EXPECT_THROW(IntegerCell i("abc", 1, 1), UnknownDataTypeException);
+    try {
+        IntegerCell i("abc", 1, 1);
+    } catch (UnknownDataTypeException& e) {
+        std::string exception = e.what();
+
+        EXPECT_EQ(exception, "Error: row 1, col 1, abc is unknown data type");
+    }
 }
 
 TEST_F(IntegerCellTests, printToFile) {

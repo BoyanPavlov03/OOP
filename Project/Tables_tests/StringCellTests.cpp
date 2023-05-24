@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 #include "StringCell.h"
-#include "UnknownDataTypeException.h"
+#include "Exceptions/UnknownDataTypeException.h"
 
 class StringCellTests : public ::testing::Test {
 protected:
@@ -65,5 +65,11 @@ TEST_F(StringCellTests, extractStringWithEscapedBackslash) {
 }
 
 TEST_F(StringCellTests, extractStringWithInvalidEscapeSequence) {
-    EXPECT_THROW(StringCell s("\"ab\a\\c\"", 1, 1), UnknownDataTypeException);
+    try {
+        StringCell s("\"ab\a\\c\"", 1, 1);
+    } catch (UnknownDataTypeException& e) {
+        std::string exception = e.what();
+
+        EXPECT_EQ(exception, "Error: row 1, col 1, \"ab\a\\c\" is unknown data type");
+    }
 }
