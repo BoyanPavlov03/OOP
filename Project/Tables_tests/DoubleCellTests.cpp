@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "DoubleCell.h"
+#include "Cells/DoubleCell.h"
 #include "Exceptions/UnknownDataTypeException.h"
 
 class DoubleCellTests : public ::testing::Test {};

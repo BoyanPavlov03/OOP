@@ -1,7 +1,7 @@
 #include "Table.h"
-#include "StringCell.h"
-#include "CellFactory.h"
-#include "NullCell.h"
+#include "Cells/StringCell.h"
+#include "Cells/CellFactory.h"
+#include "Cells/NullCell.h"
 #include "Exceptions/UnknownDataTypeException.h"
 #include <iostream>
 #include <sstream>
@@ -108,7 +108,7 @@ void Table::parseCommand(const std::string &command) {
 void Table::saveAs(const std::string &newName) {
     std::ofstream newFile(newName);
     if (!newFile.is_open()) {
-        std::cout << "Error opening file: " << newName << std::endl;
+        std::cout << "Error opening file for save: " << newName << std::endl;
         return;
     }
 
@@ -121,7 +121,7 @@ void Table::saveAs(const std::string &newName) {
 void Table::save() {
     std::ofstream file(fileName);
     if (!file.is_open()) {
-        std::cout << "Error saving file: " << fileName << std::endl;
+        std::cout << "Error opening file for save: " << fileName << std::endl;
         return;
     }
     file << *this;

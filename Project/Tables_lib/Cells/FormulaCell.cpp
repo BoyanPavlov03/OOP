@@ -1,6 +1,7 @@
 #include "FormulaCell.h"
 #include "Exceptions/RecursiveCellException.h"
 #include "Exceptions/InvalidFormulaException.h"
+#include "Exceptions/DivisionByZeroException.h"
 #include <iostream>
 
 FormulaCell::FormulaCell(const std::string originalString, int row, int col) : Cell(row, col, originalString) {}
@@ -97,6 +98,9 @@ void FormulaCell::calculateTwoNumbers(std::stack<double>& operands, std::stack<c
     } else if (op == '*') {
         result = op1 * op2;
     } else {
+        if (op2 == 0) {
+            throw DivisionByZeroException(originalString, row, col);
+        }
         result = op1 / op2;
     }
     operands.push(result);

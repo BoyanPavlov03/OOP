@@ -1,9 +1,9 @@
 #include "CellFactory.h"
-#include "StringCell.h"
-#include "DoubleCell.h"
-#include "FormulaCell.h"
-#include "IntegerCell.h"
-#include "NullCell.h"
+#include "Cells/StringCell.h"
+#include "Cells/DoubleCell.h"
+#include "Cells/FormulaCell.h"
+#include "Cells/IntegerCell.h"
+#include "Cells/NullCell.h"
 #include "Exceptions/UnknownDataTypeException.h"
 
 Cell* CellFactory::createCell(const std::string& str, int row, int col) {

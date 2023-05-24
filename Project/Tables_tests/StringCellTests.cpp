@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "StringCell.h"
+#include "Cells/StringCell.h"
 #include "Exceptions/UnknownDataTypeException.h"
 
 class StringCellTests : public ::testing::Test {
@@ -47,6 +47,16 @@ TEST_F(StringCellTests, getNumericValueForString) {
 TEST_F(StringCellTests, getNumericValueForIntegerWrappedInQuotes) {
     StringCell s("\"123\"", 1, 1);
     EXPECT_EQ(s.getNumericValue(), 123);
+}
+
+TEST_F(StringCellTests, getNumericValueForDoubleWrappedInQuotes) {
+    StringCell s("\"123.56\"", 1, 1);
+    EXPECT_EQ(s.getNumericValue(), 123.56);
+}
+
+TEST_F(StringCellTests, getNumericValueForFakeDoubleWrappedInQuotes) {
+    StringCell s("\"123.56.56\"", 1, 1);
+    EXPECT_EQ(s.getNumericValue(), 0);
 }
 
 TEST_F(StringCellTests, extractString) {

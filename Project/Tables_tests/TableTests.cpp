@@ -1,10 +1,10 @@
 #include "gtest/gtest.h"
 #include "Table.h"
-#include "IntegerCell.h"
-#include "DoubleCell.h"
-#include "StringCell.h"
-#include "NullCell.h"
-#include "Cell.h"
+#include "Cells/IntegerCell.h"
+#include "Cells/DoubleCell.h"
+#include "Cells/StringCell.h"
+#include "Cells/NullCell.h"
+#include "Cells/Cell.h"
 #include "Exceptions/UnknownDataTypeException.h"
 #include "Exceptions/RecursiveCellException.h"
 #include <vector>
@@ -375,4 +375,24 @@ TEST_F(TableTests, recursiveFormulas) {
 
         EXPECT_EQ(exceptionMessage, "Error: row 1, col 3, =R2C2 is a recursive formula");
     }
+}
+
+TEST_F(TableTests, testSaveWhenFileOpeningFails) {
+    // first open file than save
+    table->parseCommand("open ../../resources/readOnlyFile.txt");
+    std::stringstream ss;
+    testing::internal::CaptureStdout();
+    table->parseCommand("save");
+    std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(output, "Error opening file for save: ../../resources/readOnlyFile.txt\n");
+}
+
+TEST_F(TableTests, testSaveAsWhenFileOpeningFails) {
+    // first open file than save
+    table->parseCommand("open ../../resources/file1.txt");
+    std::stringstream ss;
+    testing::internal::CaptureStdout();
+    table->parseCommand("saveas ../../resources/readOnlyFile.txt");
+    std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(output, "Error opening file for save: ../../resources/readOnlyFile.txt\n");
 }

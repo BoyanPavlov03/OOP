@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "IntegerCell.h"
+#include "Cells/IntegerCell.h"
 #include "Exceptions/UnknownDataTypeException.h"
 
 class IntegerCellTests : public ::testing::Test {

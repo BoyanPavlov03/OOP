@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
-#include "FormulaCell.h"
+#include "Cells/FormulaCell.h"
 #include "Exceptions/InvalidFormulaException.h"
+#include "Exceptions/DivisionByZeroException.h"
 
 class FormulaCellTests : public ::testing::Test {};
 
@@ -34,6 +35,17 @@ TEST_F(FormulaCellTests, constructorWithMoreInvalidNumberOfOperands) {
         std::string exception = e.what();
 
         EXPECT_EQ(exception, "Error: row 1, col 1, =(1 + 3) 2 is an invalid formula");
+    }
+}
+
+TEST_F(FormulaCellTests, constructorWithFormulaThatIsDividingByZero) {
+    try {
+        FormulaCell f("=(1 + 3) / 0", 1, 1);
+        f.update({});
+    } catch (DivisionByZeroException& e) {
+        std::string exception = e.what();
+
+        EXPECT_EQ(exception, "Error: row 1, col 1, =(1 + 3) / 0 has division by 0");
     }
 }
 

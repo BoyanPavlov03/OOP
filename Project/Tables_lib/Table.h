@@ -3,7 +3,7 @@
 #include <string>
 #include <stack>
 #include <fstream>
-#include "Cell.h"
+#include "Cells/Cell.h"
 #include "CommandExecutor.h"
 
 class Table: public CommandExecutor {

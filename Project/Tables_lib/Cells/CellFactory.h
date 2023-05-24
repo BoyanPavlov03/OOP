@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
-#include "Cell.h"
+#include "Cells/Cell.h"
 
 class CellFactory {
 public:
