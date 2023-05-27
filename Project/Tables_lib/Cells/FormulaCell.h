@@ -19,9 +19,53 @@ class FormulaCell: public Cell {
      * @param operands The stack of operands.
      * @param operators The stack of operators.
      */
-    void calculateTwoNumbers(std::stack<double>& operands, std::stack<char>& operators);
     double getCellValue(const std::vector<std::vector<Cell*>>& data, unsigned int& index);
-    double extractNumber(std::string number, unsigned int &index);
+
+    /*!
+     * @brief Extracts a number from the expression.
+     * @param index The index of the expression.
+     * @param expression The expression to extract the number from.
+     * @return The extracted number.
+     */
+    std::string extractNumber(unsigned int &index, const std::string &expression);
+
+    /*!
+     * @brief Converts an infix expression to a postfix expression.
+     * @param expression The expression to convert.
+     * @param data The data of the table.
+     * @return The converted expression.
+     */
+    std::string infixToPostfix(const std::string& expression, const std::vector<std::vector<Cell*>> &data);
+
+    /*!
+     * @brief Evaluates a postfix expression.
+     * @param expression The expression to evaluate.
+     * @return The result of the evaluation.
+     */
+    double evaluateRPN(const std::string& expression);
+
+    /*!
+     * @brief Checks if a character is an operator.
+     * @param c The character to check.
+     * @return Whether the character is an operator.
+     */
+    bool isOperator(char c);
+
+    /*!
+     * @brief Gets the precedence of an operator.
+     * @param c The operator to get the precedence of.
+     * @return The precedence of the operator.
+     */
+    int getPrecedence(char c);
+
+    /*!
+     * @brief Performs an operation on 2 operands.
+     * @param operation The operation to perform.
+     * @param operand1 The first operand.
+     * @param operand2 The second operand.
+     * @return The result of the operation.
+     */
+    double performOperation(char operation, double operand1, double operand2);
 
 public:
     /*!

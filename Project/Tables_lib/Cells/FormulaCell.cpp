@@ -2,8 +2,9 @@
 #include "Exceptions/RecursiveCellException.h"
 #include "Exceptions/InvalidFormulaException.h"
 #include "Exceptions/DivisionByZeroException.h"
+#include "ConversionHelper.h"
 #include <iostream>
-#include <sstream>
+#include <cmath>
 
 FormulaCell::FormulaCell(const std::string originalString, int row, int col) : Cell(row, col, originalString) {}
 
@@ -12,10 +13,7 @@ void FormulaCell::printToFile(std::ostream& os) const {
 }
 
 std::string FormulaCell::toString() const {
-    std::string str = std::to_string (value);
-    str.erase ( str.find_last_not_of('0') + 1, std::string::npos );
-    str.erase ( str.find_last_not_of('.') + 1, std::string::npos );
-    return str;
+    return ConversionHelper::toString(value);
 }
 
 Cell *FormulaCell::clone() const {
@@ -30,110 +28,91 @@ void FormulaCell::update(const std::vector<std::vector<Cell*>> &data) {
     if (isCurrentlyUpdating) {
         throw RecursiveCellException(originalString, row, col);
     }
-
     isCurrentlyUpdating = true;
 
-    std::stack<double> operands;
-    std::stack<char> operators;
+    std::string postfix = infixToPostfix(originalString, data);
+    value = evaluateRPN(postfix);
+}
 
-    for (unsigned int index = 1; index < originalString.length(); index++) {
-        if (originalString[index] == '-' || originalString[index] == '+') {
-            index++;
-            if (index >= originalString.length()) {
-                throw InvalidFormulaException(originalString, row, col);
-            } else if (originalString[index] == ' ') {
-                operators.push(originalString[index - 1]);
-            } else if (originalString[index] == 'R') {
-                operands.push(getCellValue(data, index));
-            } else {
-                std::string number;
-                number += originalString[index - 1];
-                operands.push(extractNumber(number, index));
+std::string FormulaCell::infixToPostfix(const std::string& expression, const std::vector<std::vector<Cell*>> &data) {
+    std::stack<char> operators;
+    std::string postfix;
+
+    for (unsigned int index = 0; index < expression.length(); index++) {
+        if (expression[index] == ' ') {
+            continue;
+        } else if (expression[index] >= '0' && expression[index] <= '9' || expression[index] == '.') {
+            postfix += expression[index];
+        } else if (expression[index] == 'R') {
+            double cellValue = getCellValue(data, index);
+            postfix += ConversionHelper::toString(cellValue);
+        } else if (isOperator(expression[index])) {
+            while (!operators.empty() &&
+                   operators.top() != '(' &&
+                   getPrecedence(expression[index]) <= getPrecedence(operators.top())) {
+                postfix += ' ';
+                postfix += operators.top();
+                operators.pop();
             }
-            index--;
-        } else if (originalString[index] >= '0' && originalString[index] <= '9') {
-            std::string number;
-            operands.push(extractNumber(number, index));
-            index--;
-        } else if (originalString[index] == '+' || originalString[index] == '-' || originalString[index] == '*' || originalString[index] == '/') {
-            operators.push(originalString[index]);
-        } else if (originalString[index] == '(') {
-            operators.push(originalString[index]);
-        } else if (originalString[index] == ')') {
+
+            postfix += ' ';
+            operators.push(expression[index]);
+        } else if (expression[index] == '(') {
+            operators.push(expression[index]);
+        } else if (expression[index] == ')') {
             do {
-                if (operators.empty() || operands.size() < 2) {
+                if (operators.empty()) {
                     throw InvalidFormulaException(originalString, row, col);
                 }
 
-                calculateTwoNumbers(operands, operators);
+                postfix += ' ';
+                postfix += operators.top();
+                operators.pop();
             } while(operators.top() != '(');
 
             operators.pop();
-        } else if (originalString[index] == 'R') {
-            operands.push(getCellValue(data, index));
-            index--;
-        } else if (originalString[index] == ' ') {
-            continue;
-        } else {
-            throw InvalidFormulaException(originalString, row, col);
         }
     }
 
     while (!operators.empty()) {
-        if (operands.size() < 2) {
-            throw InvalidFormulaException(originalString, row, col);
-        }
-        calculateTwoNumbers(operands, operators);
+        postfix += ' ';
+        postfix += operators.top();
+        operators.pop();
     }
 
-    if (operands.size() != 1) {
-        throw InvalidFormulaException(originalString, row, col);
-    }
-
-    value = operands.top();
-    isCurrentlyUpdating = false;
+    return postfix;
 }
 
-void FormulaCell::calculateTwoNumbers(std::stack<double>& operands, std::stack<char>& operators) {
-    double op2 = operands.top();
-    operands.pop();
-    double op1 = operands.top();
-    operands.pop();
-    char op = operators.top();
-    operators.pop();
+double FormulaCell::evaluateRPN(const std::string& expression) {
+    std::stack<double> operandStack;
 
-    double result;
-    if (op == '+') {
-        result = op1 + op2;
-    } else if (op == '-') {
-        result = op1 - op2;
-    } else if (op == '*') {
-        result = op1 * op2;
-    } else {
-        if (op2 == 0) {
-            throw DivisionByZeroException(originalString, row, col);
+    for (unsigned int index = 0; index < expression.length(); index++) {
+        if (expression[index] == ' ') {
+            continue;
+        } else if (expression[index] >= '0' && expression[index] <= '9' || expression[index] == '.') {
+            std::string numberString = extractNumber(index, expression);
+            operandStack.push(std::stod(numberString));
+        } else if (isOperator(expression[index])) {
+            if (operandStack.size() < 2) {
+                throw InvalidFormulaException(originalString, row, col);
+            }
+
+            double operand2 = operandStack.top();
+            operandStack.pop();
+            double operand1 = operandStack.top();
+            operandStack.pop();
+
+            double result = performOperation(expression[index], operand1, operand2);
+            operandStack.push(result);
         }
-        result = op1 / op2;
     }
-    operands.push(result);
-}
 
-double FormulaCell::extractNumber(std::string numberString, unsigned int &index) {
-    if (originalString[index] >= '0' && originalString[index] <= '9') {
-        while (originalString[index] >= '0' && originalString[index] <= '9' || originalString[index] == '.') {
-            numberString += originalString[index];
-            index++;
-        }
+    if (operandStack.size() == 1) {
+        isCurrentlyUpdating = false;
+        return operandStack.top();
     } else {
         throw InvalidFormulaException(originalString, row, col);
     }
-
-    double num;
-    if (!(std::istringstream(numberString) >> num >> std::ws).eof()) {
-        throw InvalidFormulaException(originalString, row, col);
-    }
-
-    return num;
 }
 
 double FormulaCell::getCellValue(const std::vector<std::vector<Cell*>> &data, unsigned int &index) {
@@ -161,4 +140,49 @@ double FormulaCell::getCellValue(const std::vector<std::vector<Cell*>> &data, un
     }
 
     return cellValue;
+}
+
+std::string FormulaCell::extractNumber(unsigned int &index, const std::string &expression) {
+    std::string numberString;
+    while (expression[index] >= '0' && expression[index] <= '9' || expression[index] == '.') {
+        numberString += expression[index];
+        index++;
+    }
+
+    index--;
+    return numberString;
+}
+
+bool FormulaCell::isOperator(char c) {
+    return (c == '+' || c == '-' || c == '*' || c == '/' || c == '^');
+}
+
+int FormulaCell::getPrecedence(char c) {
+    if (c == '+' || c == '-')
+        return 1;
+    else if (c == '*' || c == '/')
+        return 2;
+    else if (c == '^')
+        return 3;
+    return 0;
+}
+
+double FormulaCell::performOperation(char operation, double operand1, double operand2) {
+    switch (operation) {
+        case '+':
+            return operand1 + operand2;
+        case '-':
+            return operand1 - operand2;
+        case '*':
+            return operand1 * operand2;
+        case '/':
+            if (operand2 == 0) {
+                throw DivisionByZeroException(originalString, row, col);
+            }
+            return operand1 / operand2;
+        case '^':
+            return pow(operand1, operand2);
+        default:
+            return 0.0;
+    }
 }

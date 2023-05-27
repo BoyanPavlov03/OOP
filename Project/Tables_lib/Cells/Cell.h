@@ -69,13 +69,6 @@ public:
     friend std::ostream& operator<<(std::ostream& os, const Cell& cell);
 
     /*!
-     * \brief Trims the given string from whitespaces.
-     * \param str The string to trim.
-     * \return The trimmed string.
-     */
-    static std::string trim(const std::string& str);
-
-    /*!
      * \brief Returns the original string of the cell.
      * \return The original string of the cell.
      */

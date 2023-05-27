@@ -1,12 +1,11 @@
 #include "DoubleCell.h"
 #include "Exceptions/UnknownDataTypeException.h"
+#include "ConversionHelper.h"
 #include <iostream>
 #include <sstream>
 
 DoubleCell::DoubleCell(std::string str, int row, int col) : Cell(row, col, str) {
-    if (!(std::istringstream(str) >> this->value >> std::ws).eof()) {
-        throw UnknownDataTypeException(str, row, col);
-    }
+    value = ConversionHelper::toDouble(str, row, col);
 }
 
 void DoubleCell::printToFile(std::ostream& os) const {
@@ -14,10 +13,7 @@ void DoubleCell::printToFile(std::ostream& os) const {
 }
 
 std::string DoubleCell::toString() const {
-    std::string str = std::to_string (value);
-    str.erase ( str.find_last_not_of('0') + 1, std::string::npos );
-    str.erase ( str.find_last_not_of('.') + 1, std::string::npos );
-    return str;
+    return ConversionHelper::toString(value);
 }
 
 Cell *DoubleCell::clone() const {

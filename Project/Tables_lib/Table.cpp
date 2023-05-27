@@ -4,6 +4,7 @@
 #include "Cells/NullCell.h"
 #include "Cells/ErrorCell.h"
 #include "Exceptions/UnknownDataTypeException.h"
+#include "ConversionHelper.h"
 #include <iostream>
 #include <sstream>
 #include <vector>
@@ -96,7 +97,7 @@ void Table::parseCommand(const std::string &command) {
         std::string cellData;
         iss.ignore();
         std::getline(iss, cellData);
-        edit(Cell::trim(cellData), Cell::trim(coordinates));
+        edit(ConversionHelper::trim(cellData), ConversionHelper::trim(coordinates));
     } else if (commandName == "print") {
         print();
     }
@@ -151,7 +152,7 @@ void Table::open() {
 
         for (const auto& character : line) {
             if (character == ',') {
-                std::string trimmed = Cell::trim(lineCell);
+                std::string trimmed = ConversionHelper::trim(lineCell);
 
                 Cell* tableCell = CellFactory::createCell(trimmed, rowIndex, colIndex)->clone();
                 row.push_back(tableCell);
@@ -163,7 +164,7 @@ void Table::open() {
             }
         }
 
-        Cell* tableCell = CellFactory::createCell(Cell::trim(lineCell), rowIndex, colIndex)->clone();
+        Cell* tableCell = CellFactory::createCell(ConversionHelper::trim(lineCell), rowIndex, colIndex)->clone();
         row.push_back(tableCell);
 
         if (row.size() > biggestRow) {

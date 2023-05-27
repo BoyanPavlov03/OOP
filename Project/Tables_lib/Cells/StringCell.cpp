@@ -2,6 +2,7 @@
 #include "Exceptions/UnknownDataTypeException.h"
 #include <iostream>
 #include <sstream>
+#include "ConversionHelper.h"
 
 StringCell::StringCell(const std::string originalString, int row, int col) : Cell(row, col, originalString) {
     extractString(originalString, row, col);
@@ -20,11 +21,11 @@ Cell *StringCell::clone() const {
 }
 
 double StringCell::getNumericValue() const {
-    double num;
-    if (!(std::istringstream(value) >> num >> std::ws).eof()) {
-        return 0;
+    try {
+        return ConversionHelper::toDouble(value, row, col);
+    } catch (...) {
+        return 0.0;
     }
-    return num;
 }
 
 void StringCell::extractString(const std::string& str, int row, int col) {
