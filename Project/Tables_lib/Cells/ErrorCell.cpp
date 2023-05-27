@@ -3,7 +3,6 @@
 ErrorCell::ErrorCell(int row, int col, const std::string originalString) : Cell(row, col, originalString) {}
 
 void ErrorCell::printToFile(std::ostream& os) const {
-    std::cout << originalString << std::endl;
     os << originalString;
 }
 

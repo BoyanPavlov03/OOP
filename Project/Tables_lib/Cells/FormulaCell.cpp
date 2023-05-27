@@ -3,6 +3,7 @@
 #include "Exceptions/InvalidFormulaException.h"
 #include "Exceptions/DivisionByZeroException.h"
 #include <iostream>
+#include <sstream>
 
 FormulaCell::FormulaCell(const std::string originalString, int row, int col) : Cell(row, col, originalString) {}
 
@@ -35,18 +36,30 @@ void FormulaCell::update(const std::vector<std::vector<Cell*>> &data) {
     std::stack<double> operands;
     std::stack<char> operators;
 
-    for (int i = 1; i < originalString.length(); i++) {
-        if (originalString[i] >= '0' && originalString[i] <= '9') {
-            double num = 0;
-            while (i < originalString.length() && originalString[i] >= '0' && originalString[i] <= '9') {
-                num = num * 10 + (originalString[i] - '0');
-                i++;
+    for (unsigned int index = 1; index < originalString.length(); index++) {
+        if (originalString[index] == '-' || originalString[index] == '+') {
+            index++;
+            if (index >= originalString.length()) {
+                throw InvalidFormulaException(originalString, row, col);
+            } else if (originalString[index] == ' ') {
+                operators.push(originalString[index - 1]);
+            } else if (originalString[index] == 'R') {
+                operands.push(getCellValue(data, index));
+            } else {
+                std::string number;
+                number += originalString[index - 1];
+                operands.push(extractNumber(number, index));
             }
-            operands.push(num);
-            i--;
-        } else if (originalString[i] == '+' || originalString[i] == '-' || originalString[i] == '*' || originalString[i] == '/' || originalString[i] == '(') {
-            operators.push(originalString[i]);
-        } else if (originalString[i] == ')') {
+            index--;
+        } else if (originalString[index] >= '0' && originalString[index] <= '9') {
+            std::string number;
+            operands.push(extractNumber(number, index));
+            index--;
+        } else if (originalString[index] == '+' || originalString[index] == '-' || originalString[index] == '*' || originalString[index] == '/') {
+            operators.push(originalString[index]);
+        } else if (originalString[index] == '(') {
+            operators.push(originalString[index]);
+        } else if (originalString[index] == ')') {
             do {
                 if (operators.empty() || operands.size() < 2) {
                     throw InvalidFormulaException(originalString, row, col);
@@ -56,10 +69,10 @@ void FormulaCell::update(const std::vector<std::vector<Cell*>> &data) {
             } while(operators.top() != '(');
 
             operators.pop();
-        } else if (originalString[i] == 'R') {
-            operands.push(getCellValue(data, i));
-            i--;
-        } else if (originalString[i] == ' ') {
+        } else if (originalString[index] == 'R') {
+            operands.push(getCellValue(data, index));
+            index--;
+        } else if (originalString[index] == ' ') {
             continue;
         } else {
             throw InvalidFormulaException(originalString, row, col);
@@ -105,7 +118,25 @@ void FormulaCell::calculateTwoNumbers(std::stack<double>& operands, std::stack<c
     operands.push(result);
 }
 
-double FormulaCell::getCellValue(const std::vector<std::vector<Cell *>> &data, int &index) {
+double FormulaCell::extractNumber(std::string numberString, unsigned int &index) {
+    if (originalString[index] >= '0' && originalString[index] <= '9') {
+        while (originalString[index] >= '0' && originalString[index] <= '9' || originalString[index] == '.') {
+            numberString += originalString[index];
+            index++;
+        }
+    } else {
+        throw InvalidFormulaException(originalString, row, col);
+    }
+
+    double num;
+    if (!(std::istringstream(numberString) >> num >> std::ws).eof()) {
+        throw InvalidFormulaException(originalString, row, col);
+    }
+
+    return num;
+}
+
+double FormulaCell::getCellValue(const std::vector<std::vector<Cell*>> &data, unsigned int &index) {
     index++;
     int row = 0;
     while (index < originalString.length() && originalString[index] >= '0' && originalString[index] <= '9') {
@@ -122,7 +153,6 @@ double FormulaCell::getCellValue(const std::vector<std::vector<Cell *>> &data, i
 
     row--;
     col--;
-
 
     double cellValue = 0;
     if (row < data.size() && col < data[row].size()) {
