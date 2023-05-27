@@ -65,8 +65,16 @@ class FormulaCell: public Cell {
      * @param operand2 The second operand.
      * @return The result of the operation.
      */
-    double performOperation(char operation, double operand1, double operand2);
+    double performOperation(char operation, std::stack<double> &operands);
 
+    /*!
+     * @brief Reorders the operators in the expression.
+     * @param operators The stack of operators.
+     * @param index The index of the expression.
+     * @param expression The expression to reorder.
+     * @param postfix The postfix expression.
+     */
+    void reOrderOperators(std::stack<char> &operators, unsigned int index, const std::string &expression, std::string &postfix);
 public:
     /*!
      * @brief Creates a formula cell from a string.

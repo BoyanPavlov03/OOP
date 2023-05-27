@@ -38,78 +38,88 @@ std::string FormulaCell::infixToPostfix(const std::string& expression, const std
     std::stack<char> operators;
     std::string postfix;
 
-    for (unsigned int index = 0; index < expression.length(); index++) {
+    for (unsigned int index = 1; index < expression.length(); index++) {
         if (expression[index] == ' ') {
             continue;
+        } else if (expression[index] == '-') {
+            if (expression[index + 1] < '0' || expression[index + 1] > '9' && expression[index + 1] != 'R') {
+                reOrderOperators(operators, index, expression, postfix);
+                continue;
+            }
+
+            postfix += expression[index++];
+            postfix += extractNumber(index, expression);
         } else if (expression[index] >= '0' && expression[index] <= '9' || expression[index] == '.') {
-            postfix += expression[index];
+            postfix += extractNumber(index, expression);
         } else if (expression[index] == 'R') {
             double cellValue = getCellValue(data, index);
             postfix += ConversionHelper::toString(cellValue);
         } else if (isOperator(expression[index])) {
-            while (!operators.empty() &&
-                   operators.top() != '(' &&
-                   getPrecedence(expression[index]) <= getPrecedence(operators.top())) {
+            reOrderOperators(operators, index, expression, postfix);
+        } else if (expression[index] == '(') {
+            operators.push(expression[index]);
+        } else if (expression[index] == ')') {
+            while(!operators.empty() && operators.top() != '(') {
                 postfix += ' ';
                 postfix += operators.top();
                 operators.pop();
             }
 
-            postfix += ' ';
-            operators.push(expression[index]);
-        } else if (expression[index] == '(') {
-            operators.push(expression[index]);
-        } else if (expression[index] == ')') {
-            do {
-                if (operators.empty()) {
-                    throw InvalidFormulaException(originalString, row, col);
-                }
-
-                postfix += ' ';
-                postfix += operators.top();
-                operators.pop();
-            } while(operators.top() != '(');
-
+            if (operators.empty()) {
+                throw InvalidFormulaException(originalString, row, col);
+            }
             operators.pop();
+        } else {
+            throw InvalidFormulaException(originalString, row, col);
         }
     }
 
     while (!operators.empty()) {
+        if (operators.top() == '(') {
+            throw InvalidFormulaException(originalString, row, col);
+        }
+
         postfix += ' ';
         postfix += operators.top();
         operators.pop();
     }
 
+    std::cout << postfix << std::endl;
+
     return postfix;
 }
 
 double FormulaCell::evaluateRPN(const std::string& expression) {
-    std::stack<double> operandStack;
+    std::stack<double> operands;
 
     for (unsigned int index = 0; index < expression.length(); index++) {
+
         if (expression[index] == ' ') {
             continue;
+        } else if (expression[index] == '-') {
+            if (expression[index + 1] < '0' || expression[index + 1] > '9') {
+                operands.push(performOperation(expression[index], operands));
+                continue;
+            }
+            index++;
+
+            std::string numberString = extractNumber(index, expression);
+            double number = std::stod(numberString);
+            if (expression[index - 1] == '-') {
+                number *= -1;
+            }
+            operands.push(number);
         } else if (expression[index] >= '0' && expression[index] <= '9' || expression[index] == '.') {
             std::string numberString = extractNumber(index, expression);
-            operandStack.push(std::stod(numberString));
+            operands.push(std::stod(numberString));
         } else if (isOperator(expression[index])) {
-            if (operandStack.size() < 2) {
-                throw InvalidFormulaException(originalString, row, col);
-            }
-
-            double operand2 = operandStack.top();
-            operandStack.pop();
-            double operand1 = operandStack.top();
-            operandStack.pop();
-
-            double result = performOperation(expression[index], operand1, operand2);
-            operandStack.push(result);
+            operands.push(performOperation(expression[index], operands));
         }
     }
 
-    if (operandStack.size() == 1) {
+    if (operands.size() == 1) {
         isCurrentlyUpdating = false;
-        return operandStack.top();
+        return operands.top();
     } else {
         throw InvalidFormulaException(originalString, row, col);
     }
@@ -167,7 +177,28 @@ int FormulaCell::getPrecedence(char c) {
     return 0;
 }
 
-double FormulaCell::performOperation(char operation, double operand1, double operand2) {
+void FormulaCell::reOrderOperators(std::stack<char> &operators, unsigned int index, const std::string &expression, std::string &postfix) {
+    while (!operators.empty() &&
+           operators.top() != '(' &&
+           getPrecedence(expression[index]) <= getPrecedence(operators.top())) {
+        postfix += ' ';
+        postfix += operators.top();
+        operators.pop();
+    }
+
+    postfix += ' ';
+    operators.push(expression[index]);
+}
+
+double FormulaCell::performOperation(char operation, std::stack<double> &operands) {
+    if (operands.size() < 2) {
+        throw InvalidFormulaException(originalString, row, col);
+    }
+    double operand2 = operands.top();
+    operands.pop();
+    double operand1 = operands.top();
+    operands.pop();
+
     switch (operation) {
         case '+':
             return operand1 + operand2;
@@ -181,6 +212,9 @@ double FormulaCell::performOperation(char operation, double operand1, double ope
             }
             return operand1 / operand2;
         case '^':
+            if (operand1 < 0) {
+                return pow(operand1, operand2) * -1;
+            }
             return pow(operand1, operand2);
         default:
             return 0.0;

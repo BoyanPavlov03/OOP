@@ -16,6 +16,17 @@ TEST_F(FormulaCellTests, constructor) {
     }
 }
 
+TEST_F(FormulaCellTests, constructorTwo) {
+    try {
+        FormulaCell f("=((1 + 3)", 1, 1);
+        f.update({});
+    } catch (InvalidFormulaException& e) {
+        std::string exception = e.what();
+
+        EXPECT_EQ(exception, "Error: row 1, col 1, =((1 + 3) is an invalid formula");
+    }
+}
+
 TEST_F(FormulaCellTests, constructorWithRandomCharactersInFormula) {
     try {
         FormulaCell f("=(1a + 3)", 1, 1);
