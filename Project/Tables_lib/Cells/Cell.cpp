@@ -18,10 +18,6 @@ std::string Cell::trim(const std::string& str) {
     return str.substr(strBegin, strRange);
 }
 
-bool Cell::getIsUpdated() const {
-    return isUpdated;
-}
-
-void Cell::setIsUpdated(bool _isUpdated) {
-    isUpdated = _isUpdated;
+std::string Cell::getOriginalString() const {
+    return originalString;
 }

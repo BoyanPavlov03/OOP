@@ -2,6 +2,7 @@
 #include "Cells/StringCell.h"
 #include "Cells/CellFactory.h"
 #include "Cells/NullCell.h"
+#include "Cells/ErrorCell.h"
 #include "Exceptions/UnknownDataTypeException.h"
 #include <iostream>
 #include <sstream>
@@ -23,9 +24,7 @@ void Table::updateFormulasAndCalculateWidths() {
                 continue;
             }
 
-            if (!data[i][j]->getIsUpdated()) {
-                data[i][j]->update(data);
-            }
+            tryToUpdateCell(data[i][j], i + 1, j + 1);
 
             if (widthsOfEachColumns.size() <= j) {
                 widthsOfEachColumns.push_back(data[i][j]->toString().size());
@@ -36,11 +35,13 @@ void Table::updateFormulasAndCalculateWidths() {
     }
 }
 
-void Table::setFormulasAsNotCalculated() {
-    for (auto & row : data) {
-        for (auto & cell : row) {
-            cell->setIsUpdated(false);
-        }
+void Table::tryToUpdateCell(Cell*& cell, unsigned int row, unsigned int col) {
+    try {
+        cell->update(data);
+    } catch (std::exception& e) {
+        std::string str = cell->getOriginalString();
+        delete cell;
+        cell = new ErrorCell(row, col, str);
     }
 }
 
@@ -234,15 +235,13 @@ void Table::edit(const std::string cellData, const std::string coordinates) {
         delete data[row - 1][col - 1];
     }
 
-    Cell* cell = CellFactory::createCell(cellData, row, col);
-
-    data[row - 1][col - 1] = cell->clone();
-
     if (data[row - 1].size() > biggestRow) {
         biggestRow = data[row - 1].size();
     }
 
-    setFormulasAsNotCalculated();
+    Cell* cell = CellFactory::createCell(cellData, row, col);
+    data[row - 1][col - 1] = cell->clone();
+
     updateFormulasAndCalculateWidths();
     std::cout << "Successfully edited cell " << coordinates << std::endl;
 }

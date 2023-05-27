@@ -8,7 +8,6 @@ protected:
     std::string originalString;
     int row;
     int col;
-    bool isUpdated = false;
 
     Cell(int row, int col, std::string originalString = "");
 
@@ -22,6 +21,5 @@ public:
 
     friend std::ostream& operator<<(std::ostream& os, const Cell& cell);
     static std::string trim(const std::string& str);
-    bool getIsUpdated() const;
-    void setIsUpdated(bool _isUpdated);
+    std::string getOriginalString() const;
 };

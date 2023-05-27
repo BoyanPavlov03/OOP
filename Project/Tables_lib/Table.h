@@ -13,7 +13,7 @@ private:
     unsigned int biggestRow = 0;
 
     void updateFormulasAndCalculateWidths();
-    void setFormulasAsNotCalculated();
+    void tryToUpdateCell(Cell*& cell, unsigned int row, unsigned int col);
 
 public:
     ~Table();

@@ -26,7 +26,7 @@ double FormulaCell::getNumericValue() const {
 }
 
 void FormulaCell::update(const std::vector<std::vector<Cell*>> &data) {
-    if (isUpdated || isCurrentlyUpdating) {
+    if (isCurrentlyUpdating) {
         throw RecursiveCellException(originalString, row, col);
     }
 
@@ -78,7 +78,6 @@ void FormulaCell::update(const std::vector<std::vector<Cell*>> &data) {
     }
 
     value = operands.top();
-    isUpdated = true;
     isCurrentlyUpdating = false;
 }
 
@@ -127,10 +126,7 @@ double FormulaCell::getCellValue(const std::vector<std::vector<Cell *>> &data, i
 
     double cellValue = 0;
     if (row < data.size() && col < data[row].size()) {
-        if (!data[row][col]->getIsUpdated()) {
-            data[row][col]->update(data);
-        }
-
+        data[row][col]->update(data);
         cellValue = data[row][col]->getNumericValue();
     }
 
