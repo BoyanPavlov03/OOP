@@ -378,7 +378,6 @@ TEST_F(TableTests, recursiveFormulas) {
 }
 
 TEST_F(TableTests, testSaveWhenFileOpeningFails) {
-    // first open file than save
     table->parseCommand("open ../../resources/readOnlyFile.txt");
     std::stringstream ss;
     testing::internal::CaptureStdout();
@@ -388,7 +387,6 @@ TEST_F(TableTests, testSaveWhenFileOpeningFails) {
 }
 
 TEST_F(TableTests, testSaveAsWhenFileOpeningFails) {
-    // first open file than save
     table->parseCommand("open ../../resources/file1.txt");
     std::stringstream ss;
     testing::internal::CaptureStdout();

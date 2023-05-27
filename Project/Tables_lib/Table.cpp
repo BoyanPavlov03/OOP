@@ -8,11 +8,7 @@
 #include <vector>
 
 Table::~Table() {
-    for (auto& row : data) {
-        for (auto& cell : row) {
-            delete cell;
-        }
-    }
+    deleteCellsData();
 }
 
 void Table::updateFormulasAndCalculateWidths() {
@@ -294,6 +290,12 @@ unsigned int Table::getColWidth(int col) {
 }
 
 void Table::deleteCellsData() {
+    for (auto& row : data) {
+        for (auto& cell : row) {
+            delete cell;
+        }
+    }
+
     data.clear();
     biggestRow = 0;
     widthsOfEachColumns.clear();
