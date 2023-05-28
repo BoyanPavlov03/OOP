@@ -210,40 +210,50 @@ void Table::print() const {
 }
 
 void Table::edit(const std::string cellData, const std::string coordinates) {
-    int i = 1, row = 0, col = 0;
-    while (i < coordinates.length() && coordinates[i] >= '0' && coordinates[i] <= '9') {
-        row = row * 10 + (coordinates[i] - '0');
-        i++;
+    // Extract row and column values from the coordinates string
+    int index = 1, row = 0, col = 0;
+    while (index < coordinates.length() && coordinates[index] >= '0' && coordinates[index] <= '9') {
+        row = row * 10 + (coordinates[index] - '0');
+        index++;
     }
 
-    i++;
-    while (i < coordinates.length() && coordinates[i] >= '0' && coordinates[i] <= '9') {
-        col = col * 10 + (coordinates[i] - '0');
-        i++;
+    index++;
+    while (index < coordinates.length() && coordinates[index] >= '0' && coordinates[index] <= '9') {
+        col = col * 10 + (coordinates[index] - '0');
+        index++;
     }
 
+    // Resize the table data if the row is larger than the current size
     if (row >= data.size()) {
         data.resize(row, std::vector<Cell*>());
     }
 
+    // Resize the current row if the column is larger than the current size
     if (col >= data[row - 1].size()) {
         unsigned int currentSize = data[row - 1].size();
         data[row - 1].resize(col);
+
+        // Fill any new cells in the row with NullCell objects
         for (int j = currentSize; j < data[row - 1].size(); j++) {
             data[row - 1][j] = new NullCell(row, j + 1);
         }
     } else {
+        // Delete the existing cell at the specified coordinates
         delete data[row - 1][col - 1];
     }
 
+    // Update the biggestRow variable if the current row has more cells than the current maximum
     if (data[row - 1].size() > biggestRow) {
         biggestRow = data[row - 1].size();
     }
 
+    // Create a new cell based on the given cell data and clone it to store in the table data
     Cell* cell = CellFactory::createCell(cellData, row, col);
     data[row - 1][col - 1] = cell->clone();
 
+    // Update the formulas in the table and calculate column widths
     updateFormulasAndCalculateWidths();
+
     std::cout << "Successfully edited cell " << coordinates << std::endl;
 }
 
@@ -269,6 +279,18 @@ Cell* Table::getCell(unsigned int row, unsigned int col) const {
     return data[row][col];
 }
 
+void Table::deleteCellsData() {
+    for (auto& row : data) {
+        for (auto& cell : row) {
+            delete cell;
+        }
+    }
+
+    data.clear();
+    biggestRow = 0;
+    widthsOfEachColumns.clear();
+}
+
 unsigned int Table::getRowsCount() const {
     return data.size();
 }
@@ -287,17 +309,5 @@ unsigned int Table::getColWidth(int col) {
     }
 
     return widthsOfEachColumns[col];
-}
-
-void Table::deleteCellsData() {
-    for (auto& row : data) {
-        for (auto& cell : row) {
-            delete cell;
-        }
-    }
-
-    data.clear();
-    biggestRow = 0;
-    widthsOfEachColumns.clear();
 }
 

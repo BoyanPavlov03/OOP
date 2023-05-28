@@ -27,6 +27,13 @@ TEST_F(FormulaCellTests, constructorTwo) {
     }
 }
 
+TEST_F(FormulaCellTests, aLotOfOperations) {
+    FormulaCell f("=(1 + 5) * 2^(4 - 7/2) - 18/3 * 2", 1, 1);
+    f.update({});
+
+    EXPECT_EQ(f.getNumericValue(), -3.5147);
+}
+
 TEST_F(FormulaCellTests, constructorWithRandomCharactersInFormula) {
     try {
         FormulaCell f("=(1a + 3)", 1, 1);

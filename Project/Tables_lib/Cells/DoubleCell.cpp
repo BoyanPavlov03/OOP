@@ -1,8 +1,6 @@
 #include "DoubleCell.h"
 #include "Exceptions/UnknownDataTypeException.h"
 #include "ConversionHelper.h"
-#include <iostream>
-#include <sstream>
 
 DoubleCell::DoubleCell(std::string str, int row, int col) : Cell(row, col, str) {
     value = ConversionHelper::toDouble(str, row, col);

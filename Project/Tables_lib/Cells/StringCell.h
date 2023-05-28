@@ -8,6 +8,14 @@ class StringCell: public Cell {
      */
     std::string value;
 
+    /*!
+     * \brief Extracts the string from the given string.
+     * \param str The string to be extracted from.
+     * \param row The row of the cell.
+     * \param col The column of the cell.
+     */
+    void extractString(const std::string& str, int row, int col);
+
 public:
     /*!
      * Constructs a string cell from a string.
@@ -21,13 +29,10 @@ public:
     std::string toString() const override;
     Cell* clone() const override;
     double getNumericValue() const override;
-    void update(const std::vector<std::vector<Cell*>>& data) override {}
 
     /*!
-     * \brief Extracts the string from the given string.
-     * \param str The string to be extracted from.
-     * \param row The row of the cell.
-     * \param col The column of the cell.
+     * \brief Does nothing.
+     * \param data The data of the table.
      */
-    void extractString(const std::string& str, int row, int col);
+    void update(const std::vector<std::vector<Cell*>>& data) override {}
 };

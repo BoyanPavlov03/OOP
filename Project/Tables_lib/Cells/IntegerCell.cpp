@@ -1,6 +1,5 @@
 #include "IntegerCell.h"
 #include "Exceptions/UnknownDataTypeException.h"
-#include <iostream>
 
 IntegerCell::IntegerCell(const std::string originalString, int row, int col) : Cell(row, col, originalString) {
     try {

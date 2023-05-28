@@ -15,31 +15,32 @@ class FormulaCell: public Cell {
     bool isCurrentlyUpdating = false;
 
     /*!
-     * @brief Calculates the last 2 operands.
-     * @param operands The stack of operands.
-     * @param operators The stack of operators.
+     * @brief Calculates the value of a cell based on its formula.
+     * @param data The table data containing all the cells.
+     * @param index The index of the cell in the table data.
+     * @return The calculated value of the cell.
      */
     double getCellValue(const std::vector<std::vector<Cell*>>& data, unsigned int& index);
 
     /*!
-     * @brief Extracts a number from the expression.
-     * @param index The index of the expression.
+     * @brief Extracts a number from the given expression.
+     * @param index The current index of the expression.
      * @param expression The expression to extract the number from.
-     * @return The extracted number.
+     * @return The extracted number as a string.
      */
     std::string extractNumber(unsigned int &index, const std::string &expression);
 
     /*!
      * @brief Converts an infix expression to a postfix expression.
-     * @param expression The expression to convert.
-     * @param data The data of the table.
-     * @return The converted expression.
+     * @param expression The infix expression to convert.
+     * @param data The table data containing all the cells.
+     * @return The converted postfix expression.
      */
     std::string infixToPostfix(const std::string& expression, const std::vector<std::vector<Cell*>> &data);
 
     /*!
-     * @brief Evaluates a postfix expression.
-     * @param expression The expression to evaluate.
+     * @brief Evaluates a postfix expression and returns the result.
+     * @param expression The postfix expression to evaluate.
      * @return The result of the evaluation.
      */
     double evaluateRPN(const std::string& expression);
@@ -47,7 +48,7 @@ class FormulaCell: public Cell {
     /*!
      * @brief Checks if a character is an operator.
      * @param c The character to check.
-     * @return Whether the character is an operator.
+     * @return `true` if the character is an operator, `false` otherwise.
      */
     bool isOperator(char c);
 
@@ -59,30 +60,38 @@ class FormulaCell: public Cell {
     int getPrecedence(char c);
 
     /*!
-     * @brief Performs an operation on 2 operands.
+     * @brief Performs an operation on two operands based on the given operation.
      * @param operation The operation to perform.
-     * @param operand1 The first operand.
-     * @param operand2 The second operand.
+     * @param operands The stack of operands.
      * @return The result of the operation.
      */
     double performOperation(char operation, std::stack<double> &operands);
 
     /*!
-     * @brief Reorders the operators in the expression.
+     * @brief Reorders the operators in the expression based on precedence and associativity.
      * @param operators The stack of operators.
-     * @param index The index of the expression.
-     * @param expression The expression to reorder.
-     * @param postfix The postfix expression.
+     * @param index The current index of the expression.
+     * @param expression The original infix expression.
+     * @param postfix The partially converted postfix expression.
      */
     void reOrderOperators(std::stack<char> &operators, unsigned int index, const std::string &expression, std::string &postfix);
+
+    /*!
+     * @brief Appends the top operator from the stack to the postfix expression.
+     * @param operators The stack of operators.
+     * @param postfix The postfix expression.
+     */
+    void appendTopOperatorToPostfix(std::stack<char> &operators, std::string &postfix);
+
 public:
     /*!
-     * @brief Creates a formula cell from a string.
+     * @brief Creates a formula cell from a given string.
      * @param originalString The string to be converted to a formula cell.
      * @param row The row of the cell.
      * @param col The column of the cell.
      */
     FormulaCell(const std::string originalString, int row, int col);
+
 
     void printToFile(std::ostream& os) const override;
     std::string toString() const override;

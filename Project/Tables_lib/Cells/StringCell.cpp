@@ -1,7 +1,6 @@
 #include "StringCell.h"
 #include "Exceptions/UnknownDataTypeException.h"
 #include <iostream>
-#include <sstream>
 #include "ConversionHelper.h"
 
 StringCell::StringCell(const std::string originalString, int row, int col) : Cell(row, col, originalString) {

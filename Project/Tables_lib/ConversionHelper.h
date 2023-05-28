@@ -25,4 +25,12 @@ public:
      * \return The trimmed string.
      */
     static std::string trim(const std::string& string);
+
+    /*!
+     * \brief Rounds the given number to the given precision.
+     * \param number The number to round.
+     * \param precision The precision to round to.
+     * \return The rounded number.
+     */
+    static double round(double number, unsigned int precision);
 };

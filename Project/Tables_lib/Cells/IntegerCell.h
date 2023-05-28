@@ -20,5 +20,10 @@ public:
     std::string toString() const override;
     Cell* clone() const override;
     double getNumericValue() const override;
+
+    /*!
+     * \brief Does nothing.
+     * \param data The data of the table.
+     */
     void update(const std::vector<std::vector<Cell*>>& data) override {}
 };
