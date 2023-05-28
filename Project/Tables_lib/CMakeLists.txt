@@ -1,0 +1,28 @@
+project(Tables)
+
+add_library(Tables_lib
+        Cells/Cell.cpp
+        Cells/Cell.h
+        Cells/CellFactory.cpp
+        Cells/CellFactory.h
+        Cells/DoubleCell.cpp
+        Cells/DoubleCell.h
+        Cells/ErrorCell.cpp
+        Cells/ErrorCell.h
+        Cells/FormulaCell.cpp
+        Cells/FormulaCell.h
+        Cells/IntegerCell.cpp
+        Cells/IntegerCell.h
+        Cells/NullCell.h
+        Cells/StringCell.cpp
+        Cells/StringCell.h
+        Exceptions/DivisionByZeroException.h
+        Exceptions/InvalidFormulaException.h
+        Exceptions/RecursiveCellException.h
+        Exceptions/UnknownDataTypeException.h
+        CommandExecutor.cpp
+        CommandExecutor.h
+        ConversionHelper.cpp
+        ConversionHelper.h
+        Table.cpp
+        Table.h)
